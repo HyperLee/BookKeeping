@@ -198,13 +198,13 @@
 
 ### Implementation for User Story 6
 
-- [ ] T056 [US6] Create ICsvService interface and CsvService export logic with RFC 4180 compliance (quoted fields with commas/quotes/newlines), UTF-8 BOM, header row (日期,類型,金額,分類,帳戶,備註), date range filtering in BookKeeping/Services/ICsvService.cs and BookKeeping/Services/CsvService.cs
-- [ ] T057 [US6] Add OnGetExportAsync handler to Transactions page returning FileContentResult (text/csv, UTF-8 BOM, Content-Disposition attachment) with optional startDate/endDate params in BookKeeping/Pages/Transactions/Index.cshtml.cs
-- [ ] T058 [US6] Add export UI controls (date range picker, export button) to Transactions/Index page in BookKeeping/Pages/Transactions/Index.cshtml
+- [x] T056 [US6] Create ICsvService interface and CsvService export logic with RFC 4180 compliance (quoted fields with commas/quotes/newlines), UTF-8 BOM, header row (日期,類型,金額,分類,帳戶,備註), date range filtering in BookKeeping/Services/ICsvService.cs and BookKeeping/Services/CsvService.cs
+- [x] T057 [US6] Add OnGetExportAsync handler to Transactions page returning FileContentResult (text/csv, UTF-8 BOM, Content-Disposition attachment) with optional startDate/endDate params in BookKeeping/Pages/Transactions/Index.cshtml.cs
+- [x] T058 [US6] Add export UI controls (date range picker, export button) to Transactions/Index page in BookKeeping/Pages/Transactions/Index.cshtml
 
 ### Tests for User Story 6
 
-- [ ] T081 [US6] Create CsvServiceExportTests — verify RFC 4180 compliance (fields with commas/quotes/newlines properly escaped), UTF-8 BOM present, header row correct, date range filtering works, empty export produces header-only file in BookKeeping.Tests/Unit/Services/CsvServiceTests.cs
+- [x] T081 [US6] Create CsvServiceExportTests — verify RFC 4180 compliance (fields with commas/quotes/newlines properly escaped), UTF-8 BOM present, header row correct, date range filtering works, empty export produces header-only file in BookKeeping.Tests/Unit/Services/CsvServiceTests.cs
 
 **Checkpoint**: 可匯出全部或指定日期範圍的紀錄為 CSV，Excel 正確開啟，測試通過 — US6 驗證通過
 

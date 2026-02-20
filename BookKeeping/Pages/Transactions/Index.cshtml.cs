@@ -10,15 +10,18 @@ public class IndexModel : PageModel
     private readonly ITransactionService _transactionService;
     private readonly ICategoryService _categoryService;
     private readonly IAccountService _accountService;
+    private readonly ICsvService _csvService;
 
     public IndexModel(
         ITransactionService transactionService,
         ICategoryService categoryService,
-        IAccountService accountService)
+        IAccountService accountService,
+        ICsvService csvService)
     {
         _transactionService = transactionService;
         _categoryService = categoryService;
         _accountService = accountService;
+        _csvService = csvService;
     }
 
     public TransactionListViewModel ViewModel { get; set; } = new();
@@ -69,6 +72,14 @@ public class IndexModel : PageModel
             Name = a.Name,
             Icon = a.Icon
         }).ToList();
+    }
+
+    public async Task<FileContentResult> OnGetExportAsync(DateOnly? startDate, DateOnly? endDate)
+    {
+        var csvBytes = await _csvService.ExportTransactionsAsync(startDate, endDate);
+        var fileName = $"bookkeeping-export-{DateOnly.FromDateTime(DateTime.Now):yyyyMMdd}.csv";
+
+        return File(csvBytes, "text/csv; charset=utf-8", fileName);
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(int id)
