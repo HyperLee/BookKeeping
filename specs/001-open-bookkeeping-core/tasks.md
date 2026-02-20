@@ -254,17 +254,17 @@
 
 **Purpose**: 跨 User Story 的品質改善、安全強化、合規驗證與收尾工作
 
-- [ ] T065 [P] Add Serilog structured logging to all services — Information level for CRUD operations (create/update/delete with entity ID and **old/new value snapshots for audit trail**; financial amounts logged as masked values e.g. "***50" per constitution §V/§VI), Error level for exceptions with stack trace and request context (FR-039, FR-040, FR-041) in BookKeeping/Services/*.cs
-- [ ] T066 [P] Enhance global error handling — configure UseExceptionHandler middleware, update Error.cshtml with user-friendly error page, ensure all unhandled exceptions log to Serilog in BookKeeping/Program.cs and BookKeeping/Pages/Error.cshtml
-- [ ] T067 Verify responsive design across all pages — 320px minimum width (iPhone SE), 768px desktop breakpoint, touch-friendly chart interactions, bottom nav on mobile in BookKeeping/wwwroot/css/site.css
-- [ ] T068 Add XML doc comments to all public APIs (Models, Services interfaces, ViewModels) with <summary>, <param>, <returns>, <example> tags per .github/instructions/csharp.instructions.md
-- [ ] T069 Run quickstart.md end-to-end validation — dotnet build, dotnet ef database update, verify seed data, dotnet run, navigate all 9 pages, confirm CRUD operations, verify CSV export/import, check Chart.js rendering
-- [ ] T084 [P] Configure Content Security Policy (CSP) middleware — add CSP headers (default-src 'self', script-src 'self' for Chart.js/jQuery, style-src 'self' for Bootstrap, img-src 'self' data: for emoji icons) in BookKeeping/Program.cs (constitution §VI)
-- [ ] T085 [P] WCAG 2.1 accessibility audit — verify semantic HTML structure (headings, landmarks, form labels), ARIA attributes on interactive elements (Toast, modal confirmations, progress bars), keyboard navigation for all pages, color contrast ratio ≥ 4.5:1 for text (constitution §III)
-- [ ] T086 [P] Performance validation — basic benchmarks for SC-001 (new transaction < 30s UX flow), SC-002 (100-record monthly report < 2s), SC-003 (1,000-record CSV export < 5s), SC-007 (10,000-record list scroll/filter remains responsive); document results in validation notes
-- [ ] T087 [P] Privacy & dependency audit (FR-027, SC-009) — audit all NuGet packages for telemetry/external API calls, verify no outbound network requests other than to self, document findings; create privacy self-assessment checklist
-- [ ] T088 [P] UX walkthrough validation (SC-008) — manual walkthrough as first-time user: verify intuitive navigation, clear form labels, helpful empty states, Toast feedback, and successful first transaction creation without documentation
-- [ ] T089 Create DashboardPageTests — verify Dashboard returns 200, displays current month summary (income/expense/balance), shows account balances, displays budget progress bars, lists recent 10 transactions in BookKeeping.Tests/Integration/Pages/DashboardPageTests.cs
+- [X] T065 [P] Add Serilog structured logging to all services — Information level for CRUD operations (create/update/delete with entity ID and **old/new value snapshots for audit trail**; financial amounts logged as masked values e.g. "***50" per constitution §V/§VI), Error level for exceptions with stack trace and request context (FR-039, FR-040, FR-041) in BookKeeping/Services/*.cs
+- [X] T066 [P] Enhance global error handling — configure UseExceptionHandler middleware, update Error.cshtml with user-friendly error page, ensure all unhandled exceptions log to Serilog in BookKeeping/Program.cs and BookKeeping/Pages/Error.cshtml
+- [X] T067 Verify responsive design across all pages — 320px minimum width (iPhone SE), 768px desktop breakpoint, touch-friendly chart interactions, bottom nav on mobile in BookKeeping/wwwroot/css/site.css
+- [X] T068 Add XML doc comments to all public APIs (Models, Services interfaces, ViewModels) with <summary>, <param>, <returns>, <example> tags per .github/instructions/csharp.instructions.md
+- [X] T069 Run quickstart.md end-to-end validation — dotnet build, dotnet ef database update, verify seed data, dotnet run, navigate all 9 pages, confirm CRUD operations, verify CSV export/import, check Chart.js rendering
+- [X] T084 [P] Configure Content Security Policy (CSP) middleware — add CSP headers (default-src 'self', script-src 'self' for Chart.js/jQuery, style-src 'self' for Bootstrap, img-src 'self' data: for emoji icons) in BookKeeping/Program.cs (constitution §VI)
+- [X] T085 [P] WCAG 2.1 accessibility audit — verify semantic HTML structure (headings, landmarks, form labels), ARIA attributes on interactive elements (Toast, modal confirmations, progress bars), keyboard navigation for all pages, color contrast ratio ≥ 4.5:1 for text (constitution §III)
+- [X] T086 [P] Performance validation — basic benchmarks for SC-001 (new transaction < 30s UX flow), SC-002 (100-record monthly report < 2s), SC-003 (1,000-record CSV export < 5s), SC-007 (10,000-record list scroll/filter remains responsive); document results in validation notes
+- [X] T087 [P] Privacy & dependency audit (FR-027, SC-009) — audit all NuGet packages for telemetry/external API calls, verify no outbound network requests other than to self, document findings; create privacy self-assessment checklist
+- [X] T088 [P] UX walkthrough validation (SC-008) — manual walkthrough as first-time user: verify intuitive navigation, clear form labels, helpful empty states, Toast feedback, and successful first transaction creation without documentation
+- [X] T089 Create DashboardPageTests — verify Dashboard returns 200, displays current month summary (income/expense/balance), shows account balances, displays budget progress bars, lists recent 10 transactions in BookKeeping.Tests/Integration/Pages/DashboardPageTests.cs
 
 ---
 

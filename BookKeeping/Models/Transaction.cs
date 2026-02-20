@@ -5,6 +5,11 @@ namespace BookKeeping.Models;
 /// <summary>
 /// Represents a financial transaction (income or expense).
 /// </summary>
+/// <example>
+/// <code>
+/// var transaction = new Transaction { Date = DateOnly.FromDateTime(DateTime.Today), Amount = 100m, Type = TransactionType.Expense };
+/// </code>
+/// </example>
 public class Transaction : ISoftDeletable, IAuditable
 {
     /// <summary>

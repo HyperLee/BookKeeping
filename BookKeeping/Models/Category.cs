@@ -5,6 +5,11 @@ namespace BookKeeping.Models;
 /// <summary>
 /// Represents a transaction category (income or expense).
 /// </summary>
+/// <example>
+/// <code>
+/// var category = new Category { Name = "餐飲", Type = TransactionType.Expense, Icon = "🍽️" };
+/// </code>
+/// </example>
 public class Category : ISoftDeletable, IAuditable
 {
     /// <summary>

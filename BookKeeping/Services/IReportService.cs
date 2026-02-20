@@ -5,6 +5,12 @@ namespace BookKeeping.Services;
 /// <summary>
 /// Service for generating monthly report data.
 /// </summary>
+/// <example>
+/// <code>
+/// var summary = await reportService.GetMonthlySummaryAsync(2026, 2);
+/// var trends = await reportService.GetDailyTrendsAsync(2026, 2);
+/// </code>
+/// </example>
 public interface IReportService
 {
     /// <summary>

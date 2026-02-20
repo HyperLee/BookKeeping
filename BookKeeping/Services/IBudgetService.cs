@@ -6,6 +6,12 @@ namespace BookKeeping.Services;
 /// <summary>
 /// Service for managing budgets and budget usage progress.
 /// </summary>
+/// <example>
+/// <code>
+/// var progress = await budgetService.GetAllWithProgressAsync();
+/// var budget = await budgetService.CreateAsync(new Budget { CategoryId = 1, Amount = 3000m });
+/// </code>
+/// </example>
 public interface IBudgetService
 {
     /// <summary>

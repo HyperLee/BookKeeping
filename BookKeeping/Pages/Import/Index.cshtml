@@ -2,6 +2,7 @@
 @model BookKeeping.Pages.Import.IndexModel
 @{
     ViewData["Title"] = "CSV 匯入";
+    var cspNonce = ViewContext.HttpContext.Items["CspNonce"]?.ToString();
 }
 
 <div class="container mt-4">
@@ -69,7 +70,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@cspNonce">
         $(function () {
             const maxFileSizeBytes = 5 * 1024 * 1024;
             $('#importForm').on('submit', function (event) {

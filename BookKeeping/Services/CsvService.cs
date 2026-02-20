@@ -5,6 +5,7 @@ using BookKeeping.Models;
 using BookKeeping.ViewModels;
 using Ganss.Xss;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BookKeeping.Services;
 
@@ -19,44 +20,62 @@ public class CsvService : ICsvService
     private const int MaxImportRowCount = 10000;
     private readonly BookKeepingDbContext _context;
     private readonly HtmlSanitizer _htmlSanitizer;
+    private readonly ILogger<CsvService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CsvService"/> class.
     /// </summary>
     /// <param name="context">Database context.</param>
     /// <param name="htmlSanitizer">HTML sanitizer for imported text fields.</param>
-    public CsvService(BookKeepingDbContext context, HtmlSanitizer htmlSanitizer)
+    public CsvService(
+        BookKeepingDbContext context,
+        HtmlSanitizer htmlSanitizer,
+        ILogger<CsvService>? logger = null)
     {
         _context = context;
         _htmlSanitizer = htmlSanitizer;
+        _logger = logger ?? NullLogger<CsvService>.Instance;
     }
 
     /// <inheritdoc />
     public async Task<byte[]> ExportTransactionsAsync(DateOnly? startDate = null, DateOnly? endDate = null)
     {
-        var query = _context.Transactions
-            .AsNoTracking()
-            .Include(t => t.Category)
-            .Include(t => t.Account)
-            .AsQueryable();
-
-        if (startDate.HasValue)
+        try
         {
-            query = query.Where(t => t.Date >= startDate.Value);
-        }
+            var query = _context.Transactions
+                .AsNoTracking()
+                .Include(t => t.Category)
+                .Include(t => t.Account)
+                .AsQueryable();
 
-        if (endDate.HasValue)
+            if (startDate.HasValue)
+            {
+                query = query.Where(t => t.Date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(t => t.Date <= endDate.Value);
+            }
+
+            var transactions = await query
+                .OrderBy(t => t.Date)
+                .ThenBy(t => t.Id)
+                .ToListAsync();
+
+            var csvContent = BuildCsvContent(transactions);
+            _logger.LogInformation(
+                "Transactions exported as CSV. RowCount={RowCount} DateRange={StartDate}-{EndDate}",
+                transactions.Count,
+                startDate,
+                endDate);
+            return EncodeWithUtf8Bom(csvContent);
+        }
+        catch (Exception ex)
         {
-            query = query.Where(t => t.Date <= endDate.Value);
+            _logger.LogError(ex, "Failed to export transactions to CSV");
+            throw;
         }
-
-        var transactions = await query
-            .OrderBy(t => t.Date)
-            .ThenBy(t => t.Id)
-            .ToListAsync();
-
-        var csvContent = BuildCsvContent(transactions);
-        return EncodeWithUtf8Bom(csvContent);
     }
 
     /// <inheritdoc />
@@ -65,226 +84,239 @@ public class CsvService : ICsvService
         long fileSizeBytes,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(csvStream);
-
-        var result = new ImportResultViewModel();
-        if (fileSizeBytes > MaxImportFileSizeBytes)
+        try
         {
-            result.Errors.Add(new ImportError
+            ArgumentNullException.ThrowIfNull(csvStream);
+
+            var result = new ImportResultViewModel();
+            if (fileSizeBytes > MaxImportFileSizeBytes)
             {
-                LineNumber = 0,
-                ErrorMessage = "CSV 檔案大小不可超過 5MB"
-            });
-
-            return result;
-        }
-
-        var accountLookup = await _context.Accounts
-            .AsNoTracking()
-            .ToDictionaryAsync(
-                account => NormalizeLookupValue(account.Name),
-                account => account.Id,
-                StringComparer.OrdinalIgnoreCase,
-                cancellationToken);
-
-        var categoryLookup = (await _context.Categories.ToListAsync(cancellationToken))
-            .ToDictionary(
-                category => BuildCategoryLookupKey(category.Type, category.Name),
-                category => category,
-                StringComparer.OrdinalIgnoreCase);
-
-        var transactionsToCreate = new List<Transaction>();
-        using var reader = new StreamReader(
-            csvStream,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true,
-            leaveOpen: true);
-
-        var (headerRow, headerLineCount) = await ReadCsvRecordAsync(reader, cancellationToken);
-        if (headerRow is null)
-        {
-            result.Errors.Add(new ImportError
-            {
-                LineNumber = 0,
-                ErrorMessage = "無有效資料"
-            });
-
-            return result;
-        }
-
-        var currentLineNumber = headerLineCount;
-        while (true)
-        {
-            var (record, lineCount) = await ReadCsvRecordAsync(reader, cancellationToken);
-            if (record is null)
-            {
-                break;
-            }
-
-            currentLineNumber += lineCount;
-            if (string.IsNullOrWhiteSpace(record))
-            {
-                continue;
-            }
-
-            result.TotalRows++;
-            if (result.TotalRows > MaxImportRowCount)
-            {
-                result.SuccessCount = 0;
-                result.FailedCount = result.TotalRows;
                 result.Errors.Add(new ImportError
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "CSV 匯入筆數不可超過 10,000 筆"
+                    LineNumber = 0,
+                    ErrorMessage = "CSV 檔案大小不可超過 5MB"
                 });
 
                 return result;
             }
 
-            var columns = ParseCsvRow(record);
-            if (columns.Count != 6)
+            var accountLookup = await _context.Accounts
+                .AsNoTracking()
+                .ToDictionaryAsync(
+                    account => NormalizeLookupValue(account.Name),
+                    account => account.Id,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
+
+            var categoryLookup = (await _context.Categories.ToListAsync(cancellationToken))
+                .ToDictionary(
+                    category => BuildCategoryLookupKey(category.Type, category.Name),
+                    category => category,
+                    StringComparer.OrdinalIgnoreCase);
+
+            var transactionsToCreate = new List<Transaction>();
+            using var reader = new StreamReader(
+                csvStream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true,
+                leaveOpen: true);
+
+            var (headerRow, headerLineCount) = await ReadCsvRecordAsync(reader, cancellationToken);
+            if (headerRow is null)
             {
-                result.FailedCount++;
                 result.Errors.Add(new ImportError
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "欄位數量不正確，應為 6 欄"
+                    LineNumber = 0,
+                    ErrorMessage = "無有效資料"
                 });
 
-                continue;
+                return result;
             }
 
-            if (!DateOnly.TryParseExact(
-                    columns[0].Trim(),
-                    "yyyy-MM-dd",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var date))
+            var currentLineNumber = headerLineCount;
+            while (true)
             {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                var (record, lineCount) = await ReadCsvRecordAsync(reader, cancellationToken);
+                if (record is null)
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "日期格式無效，請使用 YYYY-MM-DD"
-                });
+                    break;
+                }
 
-                continue;
-            }
-
-            if (!TryParseTransactionType(columns[1], out var transactionType))
-            {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                currentLineNumber += lineCount;
+                if (string.IsNullOrWhiteSpace(record))
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "交易類型無效，請使用收入或支出"
-                });
+                    continue;
+                }
 
-                continue;
-            }
-
-            if (!decimal.TryParse(
-                    columns[2].Trim(),
-                    NumberStyles.Number,
-                    CultureInfo.InvariantCulture,
-                    out var amount)
-                || amount <= 0)
-            {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                result.TotalRows++;
+                if (result.TotalRows > MaxImportRowCount)
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "金額必須大於 0"
-                });
+                    result.SuccessCount = 0;
+                    result.FailedCount = result.TotalRows;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "CSV 匯入筆數不可超過 10,000 筆"
+                    });
 
-                continue;
-            }
+                    return result;
+                }
 
-            var categoryName = SanitizeText(columns[3]);
-            if (string.IsNullOrWhiteSpace(categoryName))
-            {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                var columns = ParseCsvRow(record);
+                if (columns.Count != 6)
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "分類不可為空"
-                });
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "欄位數量不正確，應為 6 欄"
+                    });
 
-                continue;
-            }
+                    continue;
+                }
 
-            var accountName = SanitizeText(columns[4]);
-            if (string.IsNullOrWhiteSpace(accountName))
-            {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                if (!DateOnly.TryParseExact(
+                        columns[0].Trim(),
+                        "yyyy-MM-dd",
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.None,
+                        out var date))
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = "帳戶不可為空"
-                });
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "日期格式無效，請使用 YYYY-MM-DD"
+                    });
 
-                continue;
-            }
+                    continue;
+                }
 
-            if (!accountLookup.TryGetValue(NormalizeLookupValue(accountName), out var accountId))
-            {
-                result.FailedCount++;
-                result.Errors.Add(new ImportError
+                if (!TryParseTransactionType(columns[1], out var transactionType))
                 {
-                    LineNumber = currentLineNumber,
-                    ErrorMessage = $"找不到帳戶：{accountName}"
-                });
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "交易類型無效，請使用收入或支出"
+                    });
 
-                continue;
-            }
+                    continue;
+                }
 
-            var categoryKey = BuildCategoryLookupKey(transactionType, categoryName);
-            if (!categoryLookup.TryGetValue(categoryKey, out var category))
-            {
-                category = new Category
+                if (!decimal.TryParse(
+                        columns[2].Trim(),
+                        NumberStyles.Number,
+                        CultureInfo.InvariantCulture,
+                        out var amount)
+                    || amount <= 0)
                 {
-                    Name = categoryName,
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "金額必須大於 0"
+                    });
+
+                    continue;
+                }
+
+                var categoryName = SanitizeText(columns[3]);
+                if (string.IsNullOrWhiteSpace(categoryName))
+                {
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "分類不可為空"
+                    });
+
+                    continue;
+                }
+
+                var accountName = SanitizeText(columns[4]);
+                if (string.IsNullOrWhiteSpace(accountName))
+                {
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = "帳戶不可為空"
+                    });
+
+                    continue;
+                }
+
+                if (!accountLookup.TryGetValue(NormalizeLookupValue(accountName), out var accountId))
+                {
+                    result.FailedCount++;
+                    result.Errors.Add(new ImportError
+                    {
+                        LineNumber = currentLineNumber,
+                        ErrorMessage = $"找不到帳戶：{accountName}"
+                    });
+
+                    continue;
+                }
+
+                var categoryKey = BuildCategoryLookupKey(transactionType, categoryName);
+                if (!categoryLookup.TryGetValue(categoryKey, out var category))
+                {
+                    category = new Category
+                    {
+                        Name = categoryName,
+                        Type = transactionType,
+                        Icon = transactionType == TransactionType.Income ? "💰" : "📎",
+                        Color = transactionType == TransactionType.Income ? "#4CAF50" : "#7C8798",
+                        IsDefault = false
+                    };
+
+                    _context.Categories.Add(category);
+                    categoryLookup[categoryKey] = category;
+                }
+
+                var note = SanitizeText(columns[5]);
+                transactionsToCreate.Add(new Transaction
+                {
+                    Date = date,
                     Type = transactionType,
-                    Icon = transactionType == TransactionType.Income ? "💰" : "📎",
-                    Color = transactionType == TransactionType.Income ? "#4CAF50" : "#7C8798",
-                    IsDefault = false
-                };
-
-                _context.Categories.Add(category);
-                categoryLookup[categoryKey] = category;
+                    Amount = amount,
+                    Category = category,
+                    AccountId = accountId,
+                    Note = string.IsNullOrWhiteSpace(note) ? null : note
+                });
+                result.SuccessCount++;
             }
 
-            var note = SanitizeText(columns[5]);
-            transactionsToCreate.Add(new Transaction
+            if (result.TotalRows == 0)
             {
-                Date = date,
-                Type = transactionType,
-                Amount = amount,
-                Category = category,
-                AccountId = accountId,
-                Note = string.IsNullOrWhiteSpace(note) ? null : note
-            });
-            result.SuccessCount++;
-        }
+                result.Errors.Add(new ImportError
+                {
+                    LineNumber = 0,
+                    ErrorMessage = "無有效資料"
+                });
 
-        if (result.TotalRows == 0)
-        {
-            result.Errors.Add(new ImportError
+                return result;
+            }
+
+            if (result.SuccessCount > 0)
             {
-                LineNumber = 0,
-                ErrorMessage = "無有效資料"
-            });
+                _context.Transactions.AddRange(transactionsToCreate);
+                await _context.SaveChangesAsync(cancellationToken);
+            }
 
+            _logger.LogInformation(
+                "Transactions imported from CSV. TotalRows={TotalRows} SuccessCount={SuccessCount} FailedCount={FailedCount}",
+                result.TotalRows,
+                result.SuccessCount,
+                result.FailedCount);
             return result;
         }
-
-        if (result.SuccessCount > 0)
+        catch (Exception ex)
         {
-            _context.Transactions.AddRange(transactionsToCreate);
-            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogError(ex, "Failed to import transactions from CSV. FileSizeBytes={FileSizeBytes}", fileSizeBytes);
+            throw;
         }
-
-        return result;
     }
 
     /// <summary>

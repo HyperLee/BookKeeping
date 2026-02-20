@@ -142,6 +142,7 @@
                             <div class="progress-bar @progressClass"
                                  role="progressbar"
                                  style="width: @progressWidth.ToString("0.##", CultureInfo.InvariantCulture)%;"
+                                 aria-label="@($"{budget.CategoryName} 預算使用率")"
                                  aria-valuenow="@budget.UsageRate"
                                  aria-valuemin="0"
                                  aria-valuemax="100"></div>

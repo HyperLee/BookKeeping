@@ -89,9 +89,9 @@
                     </div>
                 </form>
 
-                <form method="post" asp-page-handler="Delete" class="mt-2">
+                <form method="post" asp-page-handler="Delete" class="mt-2" data-confirm-message="確定刪除帳戶？">
                     <input type="hidden" name="id" value="@account.Id" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除帳戶？');">刪除</button>
+                    <button type="submit" class="btn btn-outline-danger btn-sm">刪除</button>
                 </form>
             </div>
         }

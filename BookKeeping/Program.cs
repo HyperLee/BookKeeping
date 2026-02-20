@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using Serilog;
+using System.Security.Cryptography;
 
 using Ganss.Xss;
 
@@ -70,9 +71,42 @@ public class Program
             }
 
             // Configure the HTTP request pipeline
+            app.UseExceptionHandler("/Error");
+            app.UseSerilogRequestLogging();
+
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next();
+                }
+                catch (Exception ex)
+                {
+                    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(
+                        ex,
+                        "Unhandled exception for {RequestMethod} {RequestPath}. TraceId={TraceId}",
+                        context.Request.Method,
+                        context.Request.Path,
+                        context.TraceIdentifier);
+                    throw;
+                }
+            });
+
+            app.Use(async (context, next) =>
+            {
+                var cspNonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+                context.Items["CspNonce"] = cspNonce;
+                context.Response.Headers["Content-Security-Policy"] =
+                    $"default-src 'self'; script-src 'self' 'nonce-{cspNonce}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self';";
+                context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                context.Response.Headers["X-Frame-Options"] = "DENY";
+                context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+                await next();
+            });
+
             if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }

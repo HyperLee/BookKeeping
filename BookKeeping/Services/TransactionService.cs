@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using BookKeeping.Data;
 using BookKeeping.Models;
 
@@ -10,12 +12,20 @@ namespace BookKeeping.Services;
 public class TransactionService : ITransactionService
 {
     private readonly BookKeepingDbContext _context;
+    private readonly ILogger<TransactionService> _logger;
 
-    public TransactionService(BookKeepingDbContext context)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TransactionService"/> class.
+    /// </summary>
+    /// <param name="context">Database context.</param>
+    /// <param name="logger">Structured logger instance.</param>
+    public TransactionService(BookKeepingDbContext context, ILogger<TransactionService>? logger = null)
     {
         _context = context;
+        _logger = logger ?? NullLogger<TransactionService>.Instance;
     }
 
+    /// <inheritdoc />
     public async Task<(List<Transaction> Transactions, int TotalCount)> GetPagedAsync(
         int page = 1,
         int pageSize = 20,
@@ -83,6 +93,7 @@ public class TransactionService : ITransactionService
         return (transactions, totalCount);
     }
 
+    /// <inheritdoc />
     public async Task<Transaction?> GetByIdAsync(int id)
     {
         return await _context.Transactions
@@ -91,31 +102,98 @@ public class TransactionService : ITransactionService
             .FirstOrDefaultAsync(t => t.Id == id);
     }
 
+    /// <inheritdoc />
     public async Task<Transaction> CreateAsync(Transaction transaction)
     {
-        _context.Transactions.Add(transaction);
-        await _context.SaveChangesAsync();
-        return transaction;
+        try
+        {
+            _context.Transactions.Add(transaction);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Transaction created. TransactionId={TransactionId} NewValues={@NewValues}",
+                transaction.Id,
+                BuildTransactionSnapshot(transaction));
+            return transaction;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create transaction for account {AccountId}", transaction.AccountId);
+            throw;
+        }
     }
 
+    /// <inheritdoc />
     public async Task<Transaction> UpdateAsync(Transaction transaction)
     {
-        _context.Transactions.Update(transaction);
-        await _context.SaveChangesAsync();
-        return transaction;
+        try
+        {
+            var existingTransaction = await _context.Transactions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(item => item.Id == transaction.Id);
+
+            _context.Transactions.Update(transaction);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Transaction updated. TransactionId={TransactionId} OldValues={@OldValues} NewValues={@NewValues}",
+                transaction.Id,
+                existingTransaction is null ? null : BuildTransactionSnapshot(existingTransaction),
+                BuildTransactionSnapshot(transaction));
+            return transaction;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update transaction {TransactionId}", transaction.Id);
+            throw;
+        }
     }
 
+    /// <inheritdoc />
     public async Task<bool> SoftDeleteAsync(int id)
     {
-        var transaction = await _context.Transactions.FindAsync(id);
-        if (transaction == null)
+        try
         {
-            return false;
-        }
+            var transaction = await _context.Transactions.FindAsync(id);
+            if (transaction is null)
+            {
+                return false;
+            }
 
-        transaction.IsDeleted = true;
-        transaction.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return true;
+            var oldValues = BuildTransactionSnapshot(transaction);
+            transaction.IsDeleted = true;
+            transaction.DeletedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Transaction soft-deleted. TransactionId={TransactionId} OldValues={@OldValues} NewValues={@NewValues}",
+                transaction.Id,
+                oldValues,
+                BuildTransactionSnapshot(transaction));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to soft-delete transaction {TransactionId}", id);
+            throw;
+        }
+    }
+
+    private static object BuildTransactionSnapshot(Transaction transaction)
+    {
+        return new
+        {
+            transaction.Id,
+            transaction.Date,
+            Amount = MaskAmount(transaction.Amount),
+            transaction.Type,
+            transaction.CategoryId,
+            transaction.AccountId,
+            transaction.Note,
+            transaction.IsDeleted
+        };
+    }
+
+    private static string MaskAmount(decimal amount)
+    {
+        var suffix = (decimal.Truncate(decimal.Abs(amount)) % 100m).ToString("00", CultureInfo.InvariantCulture);
+        return $"***{suffix}";
     }
 }

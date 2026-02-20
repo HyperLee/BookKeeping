@@ -6,6 +6,11 @@ namespace BookKeeping.ViewModels;
 /// <summary>
 /// View model for displaying budget usage progress.
 /// </summary>
+/// <example>
+/// <code>
+/// var progress = new BudgetProgressViewModel { BudgetId = 1, UsageRate = 75m, Status = "normal" };
+/// </code>
+/// </example>
 public class BudgetProgressViewModel
 {
     /// <summary>
@@ -62,6 +67,11 @@ public class BudgetProgressViewModel
 /// <summary>
 /// Input model for creating and updating budgets.
 /// </summary>
+/// <example>
+/// <code>
+/// var input = new BudgetInputModel { CategoryId = 1, Amount = 2000m, Period = BudgetPeriod.Monthly };
+/// </code>
+/// </example>
 public class BudgetInputModel
 {
     /// <summary>

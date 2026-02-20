@@ -5,6 +5,12 @@ namespace BookKeeping.Services;
 /// <summary>
 /// Service for importing and exporting transaction data as CSV.
 /// </summary>
+/// <example>
+/// <code>
+/// var bytes = await csvService.ExportTransactionsAsync();
+/// var result = await csvService.ImportTransactionsAsync(stream, stream.Length);
+/// </code>
+/// </example>
 public interface ICsvService
 {
     /// <summary>

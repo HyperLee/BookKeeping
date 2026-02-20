@@ -136,7 +136,7 @@
                             <td>@(transaction.Note ?? "-")</td>
                             <td>
                                 <a asp-page="/Transactions/Edit" asp-route-id="@transaction.Id" class="btn btn-sm btn-outline-primary">編輯</a>
-                                <form method="post" asp-page-handler="Delete" asp-route-id="@transaction.Id" class="d-inline" onsubmit="return confirm('確定要刪除此交易紀錄嗎？');">
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@transaction.Id" class="d-inline" data-confirm-message="確定要刪除此交易紀錄嗎？">
                                     <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
                                 </form>
                             </td>

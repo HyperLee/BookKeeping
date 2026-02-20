@@ -5,6 +5,11 @@ namespace BookKeeping.Models;
 /// <summary>
 /// Represents a budget for a category.
 /// </summary>
+/// <example>
+/// <code>
+/// var budget = new Budget { CategoryId = 1, Amount = 3000m, Period = BudgetPeriod.Monthly };
+/// </code>
+/// </example>
 public class Budget : ISoftDeletable, IAuditable
 {
     /// <summary>

@@ -84,6 +84,7 @@
                     <div class="progress-bar @progressClass"
                          role="progressbar"
                          style="width: @progressWidth.ToString("0.##", CultureInfo.InvariantCulture)%"
+                         aria-label="@($"{budget.CategoryName} 預算使用率")"
                          aria-valuenow="@budget.UsageRate"
                          aria-valuemin="0"
                          aria-valuemax="100"></div>
@@ -127,9 +128,9 @@
                     </div>
                 </form>
 
-                <form method="post" asp-page-handler="Delete" class="mt-2">
+                <form method="post" asp-page-handler="Delete" class="mt-2" data-confirm-message="確定刪除此預算？">
                     <input type="hidden" name="id" value="@budget.BudgetId" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除此預算？');">刪除</button>
+                    <button type="submit" class="btn btn-outline-danger btn-sm">刪除</button>
                 </form>
             </div>
         }

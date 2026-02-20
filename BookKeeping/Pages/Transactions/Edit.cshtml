@@ -2,6 +2,7 @@
 @model BookKeeping.Pages.Transactions.EditModel
 @{
     ViewData["Title"] = "編輯收支紀錄";
+    var cspNonce = ViewContext.HttpContext.Items["CspNonce"]?.ToString();
 }
 
 <div class="container mt-4">
@@ -90,7 +91,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@cspNonce">
         $(document).ready(function() {
             // Set initial category visibility
             var currentType = $('input[name="Input.Type"]:checked').val();

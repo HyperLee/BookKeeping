@@ -229,3 +229,61 @@ libman install chart.js@4 --provider cdnjs --destination wwwroot/lib/chart.js
 | SQLite 資料庫鎖定 | 確認沒有其他程式正在存取 `bookkeeping.db` |
 | 前端函式庫缺失 | 執行 `libman restore`（需先安裝 LibMan CLI） |
 | 測試執行失敗 | 確認已執行 `dotnet restore` 並且 SDK 版本為 10.0+ |
+
+---
+
+## Phase 11 驗證紀錄（2026-02-21）
+
+### T069 快速啟動與基本驗證
+
+- `dotnet build BookKeeping.sln`：成功（僅 NU1902 警告：HtmlSanitizer 8.1.870）
+- `dotnet test BookKeeping.sln --no-build`：成功（62/62 通過）
+- `dotnet ef database update --project BookKeeping`：成功
+- 啟動服務：`dotnet run --project BookKeeping --no-build --no-launch-profile --urls http://127.0.0.1:5070`
+- 種子資料驗證：`Categories=12`、`Accounts=3`
+
+| 頁面 | 狀態碼 |
+|------|--------|
+| `/` | 200 |
+| `/Transactions` | 200 |
+| `/Transactions/Create` | 200 |
+| `/Reports` | 200 |
+| `/Budgets` | 200 |
+| `/Settings/Categories` | 200 |
+| `/Settings/Accounts` | 200 |
+| `/Import` | 200 |
+| `/Privacy` | 200 |
+
+### T069 功能流程抽查
+
+- 交易 CRUD：Create/Update/Delete POST 皆回傳 `302`，刪除後資料列 `IsDeleted=1`
+- CSV 匯出：`/Transactions?handler=Export` 回傳 200，UTF-8 BOM 存在，標題列正確
+- CSV 匯入：`/Import` 回傳 200，測試列成功寫入（`imported_rows=1`）
+- Chart.js 資料：`/Reports?handler=ChartData&year=2026&month=2` 回傳 200，`categoryExpenses` 與 `dailyTrends` 皆有資料
+
+### T086 效能驗證（本機基準）
+
+| 指標 | 實測 | 目標 | 結果 |
+|------|------|------|------|
+| SC-001 新增交易 UX flow | 0.042s | < 30s | ✅ |
+| SC-002 100 筆月報表載入（頁面+圖表資料） | 0.003s | < 2s | ✅ |
+| SC-003 1,000 筆 CSV 匯出 | 0.009s | < 5s | ✅ |
+| SC-007 10,000 筆列表篩選首屏回應 | 0.011s | 維持流暢 | ✅ |
+
+> 說明：SC-007 以伺服器端首屏回應時間作為 CLI 可量測代理指標。
+
+### T087 隱私與相依套件自評清單
+
+- [x] 檢視主專案與測試專案 NuGet 套件清單（含 transitive）
+- [x] 程式碼掃描未發現 `HttpClient`/`WebClient` 等主動外呼實作
+- [x] 前端 `fetch` 僅呼叫站內相對路徑（報表資料、預算狀態）
+- [x] 執行中應用（PID 監看）無對外已建立 TCP 連線
+- [x] 例外與請求日誌含 RequestPath/TraceId，無敏感金額明文輸出（採遮罩）
+- [ ] 已知相依套件風險追蹤：NU1902（HtmlSanitizer 8.1.870）
+
+### T088 UX walkthrough 摘要
+
+- 首次新增交易流程可完成，欄位標籤完整（日期/金額/類型/分類/帳戶/備註）
+- 成功提交後可看到 Toast alert（成功訊息 + 可關閉按鈕）
+- 行動版底部導覽存在，頁面具語義化導覽 landmark 與 `aria-current`
+- 空狀態文案已覆蓋 Dashboard/交易清單/報表/預算/設定頁

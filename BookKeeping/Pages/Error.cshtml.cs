@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -8,6 +9,13 @@ namespace BookKeeping.Pages;
 [IgnoreAntiforgeryToken]
 public class ErrorModel : PageModel
 {
+    private readonly ILogger<ErrorModel> _logger;
+
+    public ErrorModel(ILogger<ErrorModel> logger)
+    {
+        _logger = logger;
+    }
+
     public string? RequestId { get; set; }
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
@@ -15,6 +23,14 @@ public class ErrorModel : PageModel
     public void OnGet()
     {
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionFeature?.Error is not null)
+        {
+            _logger.LogError(
+                exceptionFeature.Error,
+                "Error page rendered for {Path}. RequestId={RequestId}",
+                exceptionFeature.Path,
+                RequestId);
+        }
     }
 }
-

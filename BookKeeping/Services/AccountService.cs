@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using BookKeeping.Data;
 using BookKeeping.Models;
 
@@ -10,14 +12,16 @@ namespace BookKeeping.Services;
 public class AccountService : IAccountService
 {
     private readonly BookKeepingDbContext _context;
+    private readonly ILogger<AccountService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AccountService"/> class.
     /// </summary>
     /// <param name="context">Database context.</param>
-    public AccountService(BookKeepingDbContext context)
+    public AccountService(BookKeepingDbContext context, ILogger<AccountService>? logger = null)
     {
         _context = context;
+        _logger = logger ?? NullLogger<AccountService>.Instance;
     }
 
     /// <summary>
@@ -60,22 +64,33 @@ public class AccountService : IAccountService
     /// </summary>
     public async Task<Account> CreateAsync(Account account)
     {
-        var normalizedName = account.Name.Trim();
-        var hasDuplicate = await _context.Accounts
-            .AnyAsync(a => a.Name == normalizedName);
-
-        if (hasDuplicate)
+        try
         {
-            throw new InvalidOperationException("帳戶名稱已存在");
+            var normalizedName = account.Name.Trim();
+            var hasDuplicate = await _context.Accounts
+                .AnyAsync(a => a.Name == normalizedName);
+
+            if (hasDuplicate)
+            {
+                throw new InvalidOperationException("帳戶名稱已存在");
+            }
+
+            account.Name = normalizedName;
+            account.Icon = account.Icon.Trim();
+
+            _context.Accounts.Add(account);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Account created. AccountId={AccountId} NewValues={@NewValues}",
+                account.Id,
+                BuildAccountSnapshot(account));
+            return account;
         }
-
-        account.Name = normalizedName;
-        account.Icon = account.Icon.Trim();
-
-        _context.Accounts.Add(account);
-        await _context.SaveChangesAsync();
-
-        return account;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create account {AccountName}", account.Name);
+            throw;
+        }
     }
 
     /// <summary>
@@ -83,31 +98,45 @@ public class AccountService : IAccountService
     /// </summary>
     public async Task<Account?> UpdateAsync(Account account)
     {
-        var existingAccount = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == account.Id);
-
-        if (existingAccount is null)
+        try
         {
-            return null;
+            var existingAccount = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == account.Id);
+
+            if (existingAccount is null)
+            {
+                return null;
+            }
+
+            var oldValues = BuildAccountSnapshot(existingAccount);
+            var normalizedName = account.Name.Trim();
+            var hasDuplicate = await _context.Accounts
+                .AnyAsync(a => a.Id != account.Id && a.Name == normalizedName);
+
+            if (hasDuplicate)
+            {
+                throw new InvalidOperationException("帳戶名稱已存在");
+            }
+
+            existingAccount.Name = normalizedName;
+            existingAccount.Type = account.Type;
+            existingAccount.Icon = account.Icon.Trim();
+            existingAccount.InitialBalance = account.InitialBalance;
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Account updated. AccountId={AccountId} OldValues={@OldValues} NewValues={@NewValues}",
+                existingAccount.Id,
+                oldValues,
+                BuildAccountSnapshot(existingAccount));
+            return existingAccount;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update account {AccountId}", account.Id);
+            throw;
         }
 
-        var normalizedName = account.Name.Trim();
-        var hasDuplicate = await _context.Accounts
-            .AnyAsync(a => a.Id != account.Id && a.Name == normalizedName);
-
-        if (hasDuplicate)
-        {
-            throw new InvalidOperationException("帳戶名稱已存在");
-        }
-
-        existingAccount.Name = normalizedName;
-        existingAccount.Type = account.Type;
-        existingAccount.Icon = account.Icon.Trim();
-        existingAccount.InitialBalance = account.InitialBalance;
-
-        await _context.SaveChangesAsync();
-
-        return existingAccount;
     }
 
     /// <summary>
@@ -115,19 +144,32 @@ public class AccountService : IAccountService
     /// </summary>
     public async Task<bool> DeleteAsync(int accountId)
     {
-        var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == accountId);
-
-        if (account is null || await HasTransactionsAsync(accountId))
+        try
         {
-            return false;
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == accountId);
+
+            if (account is null || await HasTransactionsAsync(accountId))
+            {
+                return false;
+            }
+
+            var oldValues = BuildAccountSnapshot(account);
+            account.IsDeleted = true;
+            account.DeletedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Account deleted. AccountId={AccountId} OldValues={@OldValues} NewValues={@NewValues}",
+                account.Id,
+                oldValues,
+                BuildAccountSnapshot(account));
+            return true;
         }
-
-        account.IsDeleted = true;
-        account.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return true;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete account {AccountId}", accountId);
+            throw;
+        }
     }
 
     /// <summary>
@@ -136,5 +178,25 @@ public class AccountService : IAccountService
     public async Task<bool> HasTransactionsAsync(int accountId)
     {
         return await _context.Transactions.AnyAsync(t => t.AccountId == accountId);
+    }
+
+    private static object BuildAccountSnapshot(Account account)
+    {
+        return new
+        {
+            account.Id,
+            account.Name,
+            account.Type,
+            account.Icon,
+            InitialBalance = MaskAmount(account.InitialBalance),
+            account.Currency,
+            account.IsDeleted
+        };
+    }
+
+    private static string MaskAmount(decimal amount)
+    {
+        var suffix = (decimal.Truncate(decimal.Abs(amount)) % 100m).ToString("00", CultureInfo.InvariantCulture);
+        return $"***{suffix}";
     }
 }

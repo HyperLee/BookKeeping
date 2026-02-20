@@ -6,6 +6,11 @@ $(document).ready(function () {
     $('form').on('submit', function () {
         var $form = $(this);
         var $submitButton = $form.find('button[type="submit"]');
+        var confirmMessage = $form.data('confirm-message');
+
+        if (confirmMessage && !window.confirm(confirmMessage)) {
+            return false;
+        }
         
         // Don't disable if already disabled
         if ($submitButton.prop('disabled')) {
@@ -97,14 +102,13 @@ window.bookKeeping.checkBudgetStatusAndToast = async function (checkStatusUrl, c
 };
 
 function getOrCreateToastContainer() {
-    var existingContainer = document.querySelector('.toast-container.position-fixed.top-0.end-0.p-3');
+    var existingContainer = document.querySelector('.bookkeep-toast-container');
     if (existingContainer) {
         return existingContainer;
     }
 
     var container = document.createElement('div');
-    container.className = 'toast-container position-fixed top-0 end-0 p-3';
-    container.style.zIndex = '9999';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3 bookkeep-toast-container';
     document.body.appendChild(container);
     return container;
 }

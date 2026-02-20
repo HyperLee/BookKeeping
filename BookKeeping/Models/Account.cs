@@ -5,6 +5,11 @@ namespace BookKeeping.Models;
 /// <summary>
 /// Represents a financial account.
 /// </summary>
+/// <example>
+/// <code>
+/// var account = new Account { Name = "現金", Type = AccountType.Cash, Icon = "💵" };
+/// </code>
+/// </example>
 public class Account : ISoftDeletable, IAuditable
 {
     /// <summary>

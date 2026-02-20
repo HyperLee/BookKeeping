@@ -1,37 +1,43 @@
 <!DOCTYPE html>
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
+    var cspNonce = Context.Items["CspNonce"]?.ToString();
+}
 <html lang="zh-TW">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - 記帳本</title>
-    <script type="importmap"></script>
+    <script type="importmap" nonce="@cspNonce"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BookKeeping.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Pages/Shared/_Layout.cshtml.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="skip-link" href="#main-content">跳至主要內容</a>
+
     <!-- Desktop Navigation (≥768px) -->
     <header class="d-none d-md-block">
-        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom box-shadow">
+        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom box-shadow" role="navigation" aria-label="桌面主選單">
             <div class="container">
                 <a class="navbar-brand" asp-page="/Index">📒 記帳本</a>
                 <div class="navbar-collapse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Index">Dashboard</a>
+                            <a class="nav-link @(currentPage == "/Index" ? "active" : string.Empty)" asp-page="/Index" aria-current="@(currentPage == "/Index" ? "page" : null)">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Transactions/Index">交易紀錄</a>
+                            <a class="nav-link @(currentPage == "/Transactions/Index" ? "active" : string.Empty)" asp-page="/Transactions/Index" aria-current="@(currentPage == "/Transactions/Index" ? "page" : null)">交易紀錄</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Reports/Index">報表</a>
+                            <a class="nav-link @(currentPage == "/Reports/Index" ? "active" : string.Empty)" asp-page="/Reports/Index" aria-current="@(currentPage == "/Reports/Index" ? "page" : null)">報表</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Budgets/Index">預算</a>
+                            <a class="nav-link @(currentPage == "/Budgets/Index" ? "active" : string.Empty)" asp-page="/Budgets/Index" aria-current="@(currentPage == "/Budgets/Index" ? "page" : null)">預算</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-page="/Settings/Categories">設定</a>
+                            <a class="nav-link @(currentPage == "/Settings/Categories" || currentPage == "/Settings/Accounts" ? "active" : string.Empty)" asp-page="/Settings/Categories" aria-current="@(currentPage == "/Settings/Categories" || currentPage == "/Settings/Accounts" ? "page" : null)">設定</a>
                         </li>
                     </ul>
                 </div>
@@ -40,31 +46,31 @@
     </header>
 
     <div class="container">
-        <main role="main" class="pb-3 mb-5 mb-md-0">
+        <main role="main" id="main-content" class="pb-3 mb-5 mb-md-0">
             @RenderBody()
         </main>
     </div>
 
     <!-- Mobile Bottom Navigation (<768px) -->
-    <nav class="mobile-bottom-nav d-md-none">
-        <a class="mobile-nav-item" asp-page="/Index">
-            <span class="mobile-nav-icon">🏠</span>
+    <nav class="mobile-bottom-nav d-md-none" role="navigation" aria-label="行動版主選單">
+        <a class="mobile-nav-item @(currentPage == "/Index" ? "active" : string.Empty)" asp-page="/Index" aria-label="首頁" aria-current="@(currentPage == "/Index" ? "page" : null)">
+            <span class="mobile-nav-icon" aria-hidden="true">🏠</span>
             <span class="mobile-nav-label">首頁</span>
         </a>
-        <a class="mobile-nav-item" asp-page="/Transactions/Index">
-            <span class="mobile-nav-icon">📝</span>
+        <a class="mobile-nav-item @(currentPage == "/Transactions/Index" ? "active" : string.Empty)" asp-page="/Transactions/Index" aria-label="交易紀錄" aria-current="@(currentPage == "/Transactions/Index" ? "page" : null)">
+            <span class="mobile-nav-icon" aria-hidden="true">📝</span>
             <span class="mobile-nav-label">紀錄</span>
         </a>
-        <a class="mobile-nav-item" asp-page="/Reports/Index">
-            <span class="mobile-nav-icon">📊</span>
+        <a class="mobile-nav-item @(currentPage == "/Reports/Index" ? "active" : string.Empty)" asp-page="/Reports/Index" aria-label="報表" aria-current="@(currentPage == "/Reports/Index" ? "page" : null)">
+            <span class="mobile-nav-icon" aria-hidden="true">📊</span>
             <span class="mobile-nav-label">報表</span>
         </a>
-        <a class="mobile-nav-item" asp-page="/Budgets/Index">
-            <span class="mobile-nav-icon">💰</span>
+        <a class="mobile-nav-item @(currentPage == "/Budgets/Index" ? "active" : string.Empty)" asp-page="/Budgets/Index" aria-label="預算" aria-current="@(currentPage == "/Budgets/Index" ? "page" : null)">
+            <span class="mobile-nav-icon" aria-hidden="true">💰</span>
             <span class="mobile-nav-label">預算</span>
         </a>
-        <a class="mobile-nav-item" asp-page="/Settings/Categories">
-            <span class="mobile-nav-icon">⚙️</span>
+        <a class="mobile-nav-item @(currentPage == "/Settings/Categories" || currentPage == "/Settings/Accounts" ? "active" : string.Empty)" asp-page="/Settings/Categories" aria-label="設定" aria-current="@(currentPage == "/Settings/Categories" || currentPage == "/Settings/Accounts" ? "page" : null)">
+            <span class="mobile-nav-icon" aria-hidden="true">⚙️</span>
             <span class="mobile-nav-label">設定</span>
         </a>
     </nav>

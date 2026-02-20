@@ -1,7 +1,9 @@
+using System.Globalization;
 using BookKeeping.Data;
 using BookKeeping.Models;
 using BookKeeping.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BookKeeping.Services;
 
@@ -11,72 +13,114 @@ namespace BookKeeping.Services;
 public class BudgetService : IBudgetService
 {
     private readonly BookKeepingDbContext _context;
+    private readonly ILogger<BudgetService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetService"/> class.
     /// </summary>
     /// <param name="context">Database context.</param>
-    public BudgetService(BookKeepingDbContext context)
+    public BudgetService(BookKeepingDbContext context, ILogger<BudgetService>? logger = null)
     {
         _context = context;
+        _logger = logger ?? NullLogger<BudgetService>.Instance;
     }
 
     /// <inheritdoc/>
     public async Task<Budget> CreateAsync(Budget budget)
     {
-        await ValidateExpenseCategoryAsync(budget.CategoryId);
-        await EnsureUniqueBudgetAsync(budget.CategoryId, budget.Period);
-
-        if (budget.StartDate == default)
+        try
         {
-            budget.StartDate = GetDefaultStartDate();
-        }
+            await ValidateExpenseCategoryAsync(budget.CategoryId);
+            await EnsureUniqueBudgetAsync(budget.CategoryId, budget.Period);
 
-        _context.Budgets.Add(budget);
-        await _context.SaveChangesAsync();
-        return budget;
+            if (budget.StartDate == default)
+            {
+                budget.StartDate = GetDefaultStartDate();
+            }
+
+            _context.Budgets.Add(budget);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Budget created. BudgetId={BudgetId} NewValues={@NewValues}",
+                budget.Id,
+                BuildBudgetSnapshot(budget));
+            return budget;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create budget for category {CategoryId}", budget.CategoryId);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
     public async Task<Budget?> UpdateAsync(Budget budget)
     {
-        var existingBudget = await _context.Budgets
-            .FirstOrDefaultAsync(item => item.Id == budget.Id);
-
-        if (existingBudget is null)
+        try
         {
-            return null;
+            var existingBudget = await _context.Budgets
+                .FirstOrDefaultAsync(item => item.Id == budget.Id);
+
+            if (existingBudget is null)
+            {
+                return null;
+            }
+
+            var oldValues = BuildBudgetSnapshot(existingBudget);
+            await ValidateExpenseCategoryAsync(budget.CategoryId);
+            await EnsureUniqueBudgetAsync(budget.CategoryId, budget.Period, budget.Id);
+
+            existingBudget.CategoryId = budget.CategoryId;
+            existingBudget.Amount = budget.Amount;
+            existingBudget.Period = budget.Period;
+            existingBudget.StartDate = budget.StartDate == default
+                ? existingBudget.StartDate
+                : budget.StartDate;
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Budget updated. BudgetId={BudgetId} OldValues={@OldValues} NewValues={@NewValues}",
+                existingBudget.Id,
+                oldValues,
+                BuildBudgetSnapshot(existingBudget));
+            return existingBudget;
         }
-
-        await ValidateExpenseCategoryAsync(budget.CategoryId);
-        await EnsureUniqueBudgetAsync(budget.CategoryId, budget.Period, budget.Id);
-
-        existingBudget.CategoryId = budget.CategoryId;
-        existingBudget.Amount = budget.Amount;
-        existingBudget.Period = budget.Period;
-        existingBudget.StartDate = budget.StartDate == default
-            ? existingBudget.StartDate
-            : budget.StartDate;
-
-        await _context.SaveChangesAsync();
-        return existingBudget;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update budget {BudgetId}", budget.Id);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(int budgetId)
     {
-        var budget = await _context.Budgets
-            .FirstOrDefaultAsync(item => item.Id == budgetId);
-
-        if (budget is null)
+        try
         {
-            return false;
-        }
+            var budget = await _context.Budgets
+                .FirstOrDefaultAsync(item => item.Id == budgetId);
 
-        budget.IsDeleted = true;
-        budget.DeletedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return true;
+            if (budget is null)
+            {
+                return false;
+            }
+
+            var oldValues = BuildBudgetSnapshot(budget);
+            budget.IsDeleted = true;
+            budget.DeletedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Budget deleted. BudgetId={BudgetId} OldValues={@OldValues} NewValues={@NewValues}",
+                budget.Id,
+                oldValues,
+                BuildBudgetSnapshot(budget));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete budget {BudgetId}", budgetId);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
@@ -277,5 +321,24 @@ public class BudgetService : IBudgetService
     {
         var now = DateTime.Now;
         return new DateOnly(now.Year, now.Month, 1);
+    }
+
+    private static object BuildBudgetSnapshot(Budget budget)
+    {
+        return new
+        {
+            budget.Id,
+            budget.CategoryId,
+            Amount = MaskAmount(budget.Amount),
+            budget.Period,
+            budget.StartDate,
+            budget.IsDeleted
+        };
+    }
+
+    private static string MaskAmount(decimal amount)
+    {
+        var suffix = (decimal.Truncate(decimal.Abs(amount)) % 100m).ToString("00", CultureInfo.InvariantCulture);
+        return $"***{suffix}";
     }
 }

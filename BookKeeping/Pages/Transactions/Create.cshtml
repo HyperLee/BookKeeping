@@ -4,6 +4,7 @@
     ViewData["Title"] = "新增收支紀錄";
     var budgetCheckCategoryId = TempData["BudgetCheckCategoryId"]?.ToString() ?? string.Empty;
     var budgetCheckUrl = Url.Page("/Budgets/Index", "CheckStatus") ?? string.Empty;
+    var cspNonce = ViewContext.HttpContext.Items["CspNonce"]?.ToString();
 }
 
 <div class="container mt-4">
@@ -92,7 +93,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+    <script nonce="@cspNonce">
         $(document).ready(function() {
             // Toggle category options based on transaction type
             $('input[name="Input.Type"]').change(function() {
