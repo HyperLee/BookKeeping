@@ -1,0 +1,98 @@
+@page
+@model BookKeeping.Pages.Import.IndexModel
+@{
+    ViewData["Title"] = "CSV 匯入";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">@ViewData["Title"]</h2>
+
+    <div class="alert alert-info">
+        <p class="mb-2">請使用固定欄位順序：日期（YYYY-MM-DD）、類型、金額、分類、帳戶、備註。</p>
+        <ul class="mb-2">
+            <li>檔案格式：<code>.csv</code></li>
+            <li>檔案大小上限：5MB</li>
+            <li>單次匯入上限：10,000 筆</li>
+        </ul>
+        <a asp-page-handler="Template" class="btn btn-sm btn-outline-primary">下載 CSV 範本</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="importForm">
+                <div class="mb-3">
+                    <label asp-for="CsvFile" class="form-label">選擇 CSV 檔案</label>
+                    <input asp-for="CsvFile" type="file" accept=".csv" class="form-control" id="csvFileInput" />
+                    <span asp-validation-for="CsvFile" class="text-danger d-block"></span>
+                    <span id="csvFileClientError" class="text-danger d-block"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">開始匯入</button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.ImportResult is not null)
+    {
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">匯入結果</h5>
+                <p class="mb-1">總筆數：@Model.ImportResult.TotalRows</p>
+                <p class="mb-1 text-success">成功：@Model.ImportResult.SuccessCount</p>
+                <p class="mb-3 text-danger">失敗：@Model.ImportResult.FailedCount</p>
+
+                @if (Model.ImportResult.Errors.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 120px;">行號</th>
+                                    <th>錯誤訊息</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var error in Model.ImportResult.Errors)
+                                {
+                                    <tr>
+                                        <td>@error.LineNumber</td>
+                                        <td>@error.ErrorMessage</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            const maxFileSizeBytes = 5 * 1024 * 1024;
+            $('#importForm').on('submit', function (event) {
+                const fileInput = document.getElementById('csvFileInput');
+                const errorElement = $('#csvFileClientError');
+                errorElement.text('');
+
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                    event.preventDefault();
+                    errorElement.text('僅支援 .csv 檔案格式');
+                    return;
+                }
+
+                if (file.size > maxFileSizeBytes) {
+                    event.preventDefault();
+                    errorElement.text('檔案大小不可超過 5MB');
+                }
+            });
+        });
+    </script>
+}
