@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Globalization
 @model IndexModel
 @{
     ViewData["Title"] = "儀表板";
@@ -101,9 +102,63 @@
         </div>
     </div>
 
+    <!-- Budget Progress -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">預算進度</h5>
+            <a asp-page="/Budgets/Index" class="btn btn-sm btn-outline-primary">管理預算</a>
+        </div>
+        <div class="card-body">
+            @if (Model.ViewModel.BudgetProgress.Any())
+            {
+                @foreach (var budget in Model.ViewModel.BudgetProgress)
+                {
+                    var progressClass = budget.Status switch
+                    {
+                        "warning" => "bg-warning",
+                        "exceeded" => "bg-danger",
+                        _ => "bg-success"
+                    };
+                    var statusBadgeClass = budget.Status switch
+                    {
+                        "warning" => "bg-warning text-dark",
+                        "exceeded" => "bg-danger",
+                        _ => "bg-success"
+                    };
+                    var statusLabel = budget.Status switch
+                    {
+                        "warning" => "接近上限",
+                        "exceeded" => "超出預算",
+                        _ => "正常"
+                    };
+                    var progressWidth = budget.UsageRate > 100m ? 100m : budget.UsageRate;
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>@budget.CategoryIcon @budget.CategoryName</span>
+                            <span class="badge @statusBadgeClass">@statusLabel</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 0.9rem;">
+                            <div class="progress-bar @progressClass"
+                                 role="progressbar"
+                                 style="width: @progressWidth.ToString("0.##", CultureInfo.InvariantCulture)%;"
+                                 aria-valuenow="@budget.UsageRate"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"></div>
+                        </div>
+                        <small class="text-muted">$@budget.SpentAmount.ToString("N2") / $@budget.BudgetAmount.ToString("N2")（@budget.UsageRate.ToString("0.##")%）</small>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-0">尚未設定預算。</p>
+            }
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="text-center">
         <a asp-page="/Transactions/Create" class="btn btn-primary btn-lg">新增收支</a>
     </div>
 </div>
-

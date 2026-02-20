@@ -1,0 +1,145 @@
+@page
+@using System.Globalization
+@using BookKeeping.Models
+@model BookKeeping.Pages.Budgets.IndexModel
+@{
+    ViewData["Title"] = "預算管理";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">新增預算</div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="Create" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-3">
+                    <label class="form-label">分類</label>
+                    <select name="input.CategoryId" class="form-select" required>
+                        <option value="">請選擇分類</option>
+                        @foreach (var category in Model.ExpenseCategories)
+                        {
+                            <option value="@category.Id">@category.Icon @category.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">預算金額</label>
+                    <input name="input.Amount" type="number" step="0.01" min="0.01" class="form-control" required />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">週期</label>
+                    <select name="input.Period" class="form-select">
+                        @foreach (var period in Enum.GetValues<BudgetPeriod>())
+                        {
+                            <option value="@((int)period)">@period</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">起始日</label>
+                    <input name="input.StartDate" type="date" class="form-control" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="mb-3">預算清單</h4>
+    @if (Model.Budgets.Any())
+    {
+        @foreach (var budget in Model.Budgets)
+        {
+            var progressClass = budget.Status switch
+            {
+                "warning" => "bg-warning",
+                "exceeded" => "bg-danger",
+                _ => "bg-success"
+            };
+            var statusBadgeClass = budget.Status switch
+            {
+                "warning" => "bg-warning text-dark",
+                "exceeded" => "bg-danger",
+                _ => "bg-success"
+            };
+            var statusLabel = budget.Status switch
+            {
+                "warning" => "接近上限",
+                "exceeded" => "超出預算",
+                _ => "正常"
+            };
+            var progressWidth = budget.UsageRate > 100m ? 100m : budget.UsageRate;
+
+            <div class="border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">@budget.CategoryIcon @budget.CategoryName</h5>
+                    <span class="badge @statusBadgeClass">@statusLabel</span>
+                </div>
+                <div class="progress mb-2" style="height: 1rem;">
+                    <div class="progress-bar @progressClass"
+                         role="progressbar"
+                         style="width: @progressWidth.ToString("0.##", CultureInfo.InvariantCulture)%"
+                         aria-valuenow="@budget.UsageRate"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+                <div class="small text-muted mb-3">
+                    已使用 $@budget.SpentAmount.ToString("N2") / 預算 $@budget.BudgetAmount.ToString("N2")（@budget.UsageRate.ToString("0.##")%）
+                </div>
+
+                <form method="post" asp-page-handler="Update" class="row g-2 align-items-end">
+                    <input type="hidden" name="id" value="@budget.BudgetId" />
+                    <div class="col-md-3">
+                        <label class="form-label">分類</label>
+                        <select name="input.CategoryId" class="form-select form-select-sm" required>
+                            @foreach (var category in Model.ExpenseCategories)
+                            {
+                                <option value="@category.Id" selected="@(budget.CategoryId == category.Id ? "selected" : null)">
+                                    @category.Icon @category.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">金額</label>
+                        <input name="input.Amount" type="number" step="0.01" min="0.01" class="form-control form-control-sm" value="@budget.BudgetAmount" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">週期</label>
+                        <select name="input.Period" class="form-select form-select-sm">
+                            @foreach (var period in Enum.GetValues<BudgetPeriod>())
+                            {
+                                <option value="@((int)period)" selected="@(budget.Period == period ? "selected" : null)">@period</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">起始日</label>
+                        <input name="input.StartDate" type="date" class="form-control form-control-sm" value="@budget.StartDate.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">更新</button>
+                    </div>
+                </form>
+
+                <form method="post" asp-page-handler="Delete" class="mt-2">
+                    <input type="hidden" name="id" value="@budget.BudgetId" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除此預算？');">刪除</button>
+                </form>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">目前尚未設定任何預算。</div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

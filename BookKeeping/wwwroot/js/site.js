@@ -29,3 +29,82 @@ $(document).ready(function () {
     });
 });
 
+window.bookKeeping = window.bookKeeping || {};
+
+window.bookKeeping.showToast = function (message, toastType) {
+    if (!message) {
+        return;
+    }
+
+    var toastClass = toastType === 'warning'
+        ? 'bg-warning text-dark'
+        : toastType === 'error'
+            ? 'bg-danger text-white'
+            : 'bg-success text-white';
+    var closeButtonClass = toastType === 'warning' ? 'btn-close' : 'btn-close btn-close-white';
+    var toastContainer = getOrCreateToastContainer();
+    var toastElement = document.createElement('div');
+    toastElement.className = 'toast align-items-center ' + toastClass + ' border-0';
+    toastElement.setAttribute('role', 'alert');
+    toastElement.setAttribute('aria-live', 'assertive');
+    toastElement.setAttribute('aria-atomic', 'true');
+    toastElement.innerHTML =
+        '<div class="d-flex">' +
+        '<div class="toast-body">' + message + '</div>' +
+        '<button type="button" class="' + closeButtonClass + ' me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+        '</div>';
+
+    toastContainer.appendChild(toastElement);
+    var toast = new bootstrap.Toast(toastElement, {
+        autohide: false
+    });
+    toast.show();
+
+    toastElement.addEventListener('hidden.bs.toast', function () {
+        toastElement.remove();
+    });
+};
+
+window.bookKeeping.checkBudgetStatusAndToast = async function (checkStatusUrl, categoryId) {
+    if (!checkStatusUrl || !categoryId) {
+        return;
+    }
+
+    var queryToken = checkStatusUrl.indexOf('?') >= 0 ? '&' : '?';
+    var requestUrl = checkStatusUrl + queryToken + 'categoryId=' + encodeURIComponent(categoryId);
+
+    try {
+        var response = await fetch(requestUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        var payload = await response.json();
+        if (payload.status === 'warning') {
+            window.bookKeeping.showToast(payload.message, 'warning');
+        } else if (payload.status === 'exceeded') {
+            window.bookKeeping.showToast(payload.message, 'error');
+        }
+    } catch (error) {
+        console.error('Budget status check failed.', error);
+    }
+};
+
+function getOrCreateToastContainer() {
+    var existingContainer = document.querySelector('.toast-container.position-fixed.top-0.end-0.p-3');
+    if (existingContainer) {
+        return existingContainer;
+    }
+
+    var container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '9999';
+    document.body.appendChild(container);
+    return container;
+}

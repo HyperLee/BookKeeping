@@ -8,11 +8,16 @@ public class IndexModel : PageModel
 {
     private readonly ITransactionService _transactionService;
     private readonly IAccountService _accountService;
+    private readonly IBudgetService _budgetService;
 
-    public IndexModel(ITransactionService transactionService, IAccountService accountService)
+    public IndexModel(
+        ITransactionService transactionService,
+        IAccountService accountService,
+        IBudgetService budgetService)
     {
         _transactionService = transactionService;
         _accountService = accountService;
+        _budgetService = budgetService;
     }
 
     public DashboardViewModel ViewModel { get; set; } = new();
@@ -59,6 +64,19 @@ public class IndexModel : PageModel
             });
         }
 
+        // Get budget progress
+        var budgetProgress = await _budgetService.GetAllWithProgressAsync();
+        ViewModel.BudgetProgress = budgetProgress.Select(item => new BudgetProgressDto
+        {
+            BudgetId = item.BudgetId,
+            CategoryName = item.CategoryName,
+            CategoryIcon = item.CategoryIcon,
+            BudgetAmount = item.BudgetAmount,
+            SpentAmount = item.SpentAmount,
+            UsageRate = item.UsageRate,
+            Status = item.Status
+        }).ToList();
+
         // Get recent 10 transactions
         var (recentTransactions, _) = await _transactionService.GetPagedAsync(
             page: 1,
@@ -77,4 +95,3 @@ public class IndexModel : PageModel
         }).ToList();
     }
 }
-

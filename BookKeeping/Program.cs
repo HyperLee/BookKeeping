@@ -43,6 +43,7 @@ public class Program
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<ITransactionService, TransactionService>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IBudgetService, BudgetService>();
 
             // Add services to the container
             builder.Services.AddRazorPages();

@@ -83,7 +83,11 @@ public class CreateModel : PageModel
 
         TempData["ToastMessage"] = "交易紀錄已成功新增";
         TempData["ToastType"] = "success";
+        if (transaction.Type == TransactionType.Expense)
+        {
+            TempData["BudgetCheckCategoryId"] = transaction.CategoryId;
+        }
 
-        return RedirectToPage("/Transactions/Index");
+        return RedirectToPage();
     }
 }

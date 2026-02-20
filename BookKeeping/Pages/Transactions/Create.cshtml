@@ -2,6 +2,8 @@
 @model BookKeeping.Pages.Transactions.CreateModel
 @{
     ViewData["Title"] = "新增收支紀錄";
+    var budgetCheckCategoryId = TempData["BudgetCheckCategoryId"]?.ToString() ?? string.Empty;
+    var budgetCheckUrl = Url.Page("/Budgets/Index", "CheckStatus") ?? string.Empty;
 }
 
 <div class="container mt-4">
@@ -113,6 +115,12 @@
             // Re-enable button on validation error
             if ($('.text-danger').text().trim().length > 0) {
                 $('#submitButton').prop('disabled', false).text('儲存');
+            }
+
+            // Check budget status after successful expense creation.
+            var savedCategoryId = '@budgetCheckCategoryId';
+            if (savedCategoryId && window.bookKeeping && window.bookKeeping.checkBudgetStatusAndToast) {
+                window.bookKeeping.checkBudgetStatusAndToast('@budgetCheckUrl', savedCategoryId);
             }
         });
     </script>
