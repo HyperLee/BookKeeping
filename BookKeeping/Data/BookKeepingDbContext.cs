@@ -66,13 +66,13 @@ public class BookKeepingDbContext : DbContext
 
         // Foreign Key relationships with Restrict delete behavior
         modelBuilder.Entity<Transaction>()
-            .HasOne<Category>()
+            .HasOne(t => t.Category)
             .WithMany()
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Transaction>()
-            .HasOne<Account>()
+            .HasOne(t => t.Account)
             .WithMany()
             .HasForeignKey(t => t.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
