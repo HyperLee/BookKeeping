@@ -1,0 +1,118 @@
+@page
+@model BookKeeping.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "月度報表";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-sm-4 col-md-3">
+                    <label for="year" class="form-label">年份</label>
+                    <input id="year" name="year" type="number" min="2000" max="2100" class="form-control" value="@Model.ViewModel.Year" />
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <label for="month" class="form-label">月份</label>
+                    <select id="month" name="month" class="form-select">
+                        @for (var month = 1; month <= 12; month++)
+                        {
+                            <option value="@month" selected="@(Model.ViewModel.Month == month)">@month 月</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-4 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">查詢</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">收入</h5>
+                    <h2 class="card-text">$@Model.ViewModel.TotalIncome.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">支出</h5>
+                    <h2 class="card-text">$@Model.ViewModel.TotalExpense.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white @(Model.ViewModel.Balance >= 0 ? "bg-primary" : "bg-warning")">
+                <div class="card-body">
+                    <h5 class="card-title">結餘</h5>
+                    <h2 class="card-text">$@Model.ViewModel.Balance.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.ViewModel.HasData)
+    {
+        <div class="alert alert-info text-center" role="status">
+            本月尚無紀錄，請先新增收支資料。
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">支出分類佔比</div>
+                <div class="card-body">
+                    @if (Model.ViewModel.HasData)
+                    {
+                        <div class="position-relative" style="height: 320px;">
+                            <canvas id="categoryExpenseChart"></canvas>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">尚無圖表資料。</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">每日收支趨勢</div>
+                <div class="card-body">
+                    @if (Model.ViewModel.HasData)
+                    {
+                        <div class="position-relative" style="height: 320px;">
+                            <canvas id="dailyTrendChart"></canvas>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">尚無圖表資料。</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/charts.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if ('@Model.ViewModel.HasData.ToString().ToLowerInvariant()' !== 'true' || !window.reportCharts) {
+                return;
+            }
+
+            window.reportCharts.loadMonthlyCharts('@Html.Raw(Url.Page("/Reports/Index", "ChartData", new { year = Model.ViewModel.Year, month = Model.ViewModel.Month }))');
+        });
+    </script>
+}
