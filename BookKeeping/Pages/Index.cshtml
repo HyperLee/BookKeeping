@@ -1,10 +1,109 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "儀表板";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    <!-- Monthly Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">本月收入</h5>
+                    <h2 class="card-text">$@Model.ViewModel.TotalIncome.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">本月支出</h5>
+                    <h2 class="card-text">$@Model.ViewModel.TotalExpense.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white @(Model.ViewModel.Balance >= 0 ? "bg-primary" : "bg-warning")">
+                <div class="card-body">
+                    <h5 class="card-title">結餘</h5>
+                    <h2 class="card-text">$@Model.ViewModel.Balance.ToString("N2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Balances -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">帳戶餘額</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ViewModel.AccountBalances.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var account in Model.ViewModel.AccountBalances)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>@account.Icon @account.Name</span>
+                                    <strong class="@(account.CurrentBalance >= 0 ? "text-success" : "text-danger")">
+                                        $@account.CurrentBalance.ToString("N2")
+                                    </strong>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">尚無帳戶</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">最近交易</h5>
+                    <a asp-page="/Transactions/Index" class="btn btn-sm btn-outline-primary">查看全部</a>
+                </div>
+                <div class="card-body">
+                    @if (Model.ViewModel.RecentTransactions.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var transaction in Model.ViewModel.RecentTransactions)
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span>@transaction.CategoryIcon @transaction.CategoryName</span>
+                                            <small class="text-muted d-block">@transaction.Date.ToString("yyyy-MM-dd")</small>
+                                        </div>
+                                        <strong class="@(transaction.Type == TransactionType.Income ? "text-success" : "text-danger")">
+                                            @(transaction.Type == TransactionType.Income ? "+" : "-")$@transaction.Amount.ToString("N2")
+                                        </strong>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">尚無交易紀錄</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="text-center">
+        <a asp-page="/Transactions/Create" class="btn btn-primary btn-lg">新增收支</a>
+    </div>
 </div>
+

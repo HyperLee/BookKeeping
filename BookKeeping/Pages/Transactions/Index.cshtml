@@ -1,0 +1,132 @@
+@page
+@model BookKeeping.Pages.Transactions.IndexModel
+@{
+    ViewData["Title"] = "收支明細";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a asp-page="/Transactions/Create" class="btn btn-primary">新增收支</a>
+    </div>
+
+    <!-- Filter section -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">開始日期</label>
+                        <input type="date" name="StartDate" class="form-control" value="@Model.ViewModel.Filter.StartDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">結束日期</label>
+                        <input type="date" name="EndDate" class="form-control" value="@Model.ViewModel.Filter.EndDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">分類</label>
+                        <select name="CategoryId" class="form-select">
+                            <option value="">全部</option>
+                            @foreach (var category in Model.ViewModel.Categories)
+                            {
+                                <option value="@category.Id" selected="@(Model.ViewModel.Filter.CategoryId == category.Id)">
+                                    @category.Icon @category.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">帳戶</label>
+                        <select name="AccountId" class="form-select">
+                            <option value="">全部</option>
+                            @foreach (var account in Model.ViewModel.Accounts)
+                            {
+                                <option value="@account.Id" selected="@(Model.ViewModel.Filter.AccountId == account.Id)">
+                                    @account.Icon @account.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary w-100">篩選</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transaction list -->
+    @if (Model.ViewModel.Transactions.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>類型</th>
+                        <th>分類</th>
+                        <th>帳戶</th>
+                        <th class="text-end">金額</th>
+                        <th>備註</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in Model.ViewModel.Transactions)
+                    {
+                        <tr>
+                            <td>@transaction.Date.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                @if (transaction.Type == TransactionType.Income)
+                                {
+                                    <span class="badge bg-success">收入</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">支出</span>
+                                }
+                            </td>
+                            <td>@transaction.CategoryIcon @transaction.CategoryName</td>
+                            <td>@transaction.AccountName</td>
+                            <td class="text-end">
+                                <strong class="@(transaction.Type == TransactionType.Income ? "text-success" : "text-danger")">
+                                    @(transaction.Type == TransactionType.Income ? "+" : "-")@transaction.Amount.ToString("N2")
+                                </strong>
+                            </td>
+                            <td>@(transaction.Note ?? "-")</td>
+                            <td>
+                                <a asp-page="/Transactions/Edit" asp-route-id="@transaction.Id" class="btn btn-sm btn-outline-primary">編輯</a>
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@transaction.Id" class="d-inline" onsubmit="return confirm('確定要刪除此交易紀錄嗎？');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">刪除</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.ViewModel.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    @for (int i = 1; i <= Model.ViewModel.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.ViewModel.Filter.Page ? "active" : "")">
+                            <a class="page-link" href="?Page=@i&StartDate=@Model.ViewModel.Filter.StartDate&EndDate=@Model.ViewModel.Filter.EndDate&CategoryId=@Model.ViewModel.Filter.CategoryId&AccountId=@Model.ViewModel.Filter.AccountId">
+                                @i
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <p class="mb-0">尚無交易紀錄</p>
+        </div>
+    }
+</div>

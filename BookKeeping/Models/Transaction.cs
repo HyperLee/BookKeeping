@@ -38,10 +38,20 @@ public class Transaction : ISoftDeletable, IAuditable
     public int CategoryId { get; set; }
 
     /// <summary>
+    /// Navigation property to the related category.
+    /// </summary>
+    public Category? Category { get; set; }
+
+    /// <summary>
     /// Gets or sets the account ID (foreign key).
     /// </summary>
     [Required]
     public int AccountId { get; set; }
+
+    /// <summary>
+    /// Navigation property to the related account.
+    /// </summary>
+    public Account? Account { get; set; }
 
     /// <summary>
     /// Gets or sets optional notes for the transaction.

@@ -96,17 +96,17 @@
 
 ### Implementation for User Story 1
 
-- [ ] T028 [P] [US1] Create ICategoryService interface (GetAllAsync, GetByTypeAsync) and CategoryService implementation in BookKeeping/Services/ICategoryService.cs and BookKeeping/Services/CategoryService.cs
-- [ ] T029 [P] [US1] Create IAccountService interface (GetAllAsync, GetBalanceAsync) and AccountService implementation with balance calculation (InitialBalance + Income - Expense) in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
-- [ ] T030 [US1] Create ITransactionService interface (GetPagedAsync, GetByIdAsync, CreateAsync, UpdateAsync, SoftDeleteAsync) and TransactionService implementation with pagination (PageSize=20) and soft-delete in BookKeeping/Services/ITransactionService.cs and BookKeeping/Services/TransactionService.cs
-- [ ] T031 [P] [US1] Create TransactionInputModel, TransactionListViewModel, TransactionDto, TransactionFilter DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/TransactionViewModel.cs
-- [ ] T032 [P] [US1] Create DashboardViewModel, AccountBalanceDto, BudgetProgressDto DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/DashboardViewModel.cs
-- [ ] T033 [US1] Register ICategoryService, IAccountService, ITransactionService in DI container (AddScoped) in BookKeeping/Program.cs
-- [ ] T034 [P] [US1] Create Transactions/Create Razor Page with form (date, amount, type radio, category dropdown with frequently-used categories prioritized at top, account dropdown, note textarea), jQuery Validation, anti-forgery token, TempData Toast on success in BookKeeping/Pages/Transactions/Create.cshtml and BookKeeping/Pages/Transactions/Create.cshtml.cs
-- [ ] T035 [P] [US1] Create Transactions/Edit Razor Page with pre-filled form, OnGetAsync(int id), OnPostAsync update handler, 404 handling in BookKeeping/Pages/Transactions/Edit.cshtml and BookKeeping/Pages/Transactions/Edit.cshtml.cs
-- [ ] T036 [P] [US1] Create Transactions/Index Razor Page with transaction list table (date, amount, type icon, category, account, note), pagination, OnPostDeleteAsync soft-delete handler with confirmation in BookKeeping/Pages/Transactions/Index.cshtml and BookKeeping/Pages/Transactions/Index.cshtml.cs
-- [ ] T037 [US1] Create Dashboard (Index) page with current month summary cards (total income, total expense, balance), account balance list, recent 10 transactions in BookKeeping/Pages/Index.cshtml and BookKeeping/Pages/Index.cshtml.cs
-- [ ] T038 [US1] Add anti-duplicate-submission JavaScript guard (disable submit button on click, re-enable on validation failure) in BookKeeping/wwwroot/js/site.js
+- [X] T028 [P] [US1] Create ICategoryService interface (GetAllAsync, GetByTypeAsync) and CategoryService implementation in BookKeeping/Services/ICategoryService.cs and BookKeeping/Services/CategoryService.cs
+- [X] T029 [P] [US1] Create IAccountService interface (GetAllAsync, GetBalanceAsync) and AccountService implementation with balance calculation (InitialBalance + Income - Expense) in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
+- [X] T030 [US1] Create ITransactionService interface (GetPagedAsync, GetByIdAsync, CreateAsync, UpdateAsync, SoftDeleteAsync) and TransactionService implementation with pagination (PageSize=20) and soft-delete in BookKeeping/Services/ITransactionService.cs and BookKeeping/Services/TransactionService.cs
+- [X] T031 [P] [US1] Create TransactionInputModel, TransactionListViewModel, TransactionDto, TransactionFilter DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/TransactionViewModel.cs
+- [X] T032 [P] [US1] Create DashboardViewModel, AccountBalanceDto, BudgetProgressDto DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/DashboardViewModel.cs
+- [X] T033 [US1] Register ICategoryService, IAccountService, ITransactionService in DI container (AddScoped) in BookKeeping/Program.cs
+- [X] T034 [P] [US1] Create Transactions/Create Razor Page with form (date, amount, type radio, category dropdown with frequently-used categories prioritized at top, account dropdown, note textarea), jQuery Validation, anti-forgery token, TempData Toast on success in BookKeeping/Pages/Transactions/Create.cshtml and BookKeeping/Pages/Transactions/Create.cshtml.cs
+- [X] T035 [P] [US1] Create Transactions/Edit Razor Page with pre-filled form, OnGetAsync(int id), OnPostAsync update handler, 404 handling in BookKeeping/Pages/Transactions/Edit.cshtml and BookKeeping/Pages/Transactions/Edit.cshtml.cs
+- [X] T036 [P] [US1] Create Transactions/Index Razor Page with transaction list table (date, amount, type icon, category, account, note), pagination, OnPostDeleteAsync soft-delete handler with confirmation in BookKeeping/Pages/Transactions/Index.cshtml and BookKeeping/Pages/Transactions/Index.cshtml.cs
+- [X] T037 [US1] Create Dashboard (Index) page with current month summary cards (total income, total expense, balance), account balance list, recent 10 transactions in BookKeeping/Pages/Index.cshtml and BookKeeping/Pages/Index.cshtml.cs
+- [X] T038 [US1] Add anti-duplicate-submission JavaScript guard (disable submit button on click, re-enable on validation failure) in BookKeeping/wwwroot/js/site.js
 
 ### Tests for User Story 1
 

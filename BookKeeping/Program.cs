@@ -6,6 +6,7 @@ using Ganss.Xss;
 
 using BookKeeping.Data;
 using BookKeeping.Data.Seed;
+using BookKeeping.Services;
 
 namespace BookKeeping;
 
@@ -36,6 +37,11 @@ public class Program
 
             // Add HtmlSanitizer as singleton
             builder.Services.AddSingleton<HtmlSanitizer>();
+
+            // Register application services
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<ITransactionService, TransactionService>();
 
             // Add services to the container
             builder.Services.AddRazorPages();
