@@ -2,6 +2,10 @@
 @model BookKeeping.Pages.Transactions.IndexModel
 @{
     ViewData["Title"] = "收支明細";
+    var startDate = Model.ViewModel.Filter.StartDate?.ToString("yyyy-MM-dd");
+    var endDate = Model.ViewModel.Filter.EndDate?.ToString("yyyy-MM-dd");
+    var minAmount = Model.ViewModel.Filter.MinAmount?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    var maxAmount = Model.ViewModel.Filter.MaxAmount?.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 
 <div class="container mt-4">
@@ -47,8 +51,37 @@
                             }
                         </select>
                     </div>
+                    <div class="col-md-2">
+                        <label class="form-label">最低金額</label>
+                        <input type="number"
+                               name="MinAmount"
+                               class="form-control"
+                               min="0"
+                               step="0.01"
+                               value="@minAmount" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">最高金額</label>
+                        <input type="number"
+                               name="MaxAmount"
+                               class="form-control"
+                               min="0"
+                               step="0.01"
+                               value="@maxAmount" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">關鍵字</label>
+                        <input type="text"
+                               name="Keyword"
+                               class="form-control"
+                               placeholder="搜尋備註"
+                               value="@Model.ViewModel.Filter.Keyword" />
+                    </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-secondary w-100">篩選</button>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <a asp-page="/Transactions/Index" class="btn btn-outline-secondary w-100">清除篩選</a>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="submit"
@@ -121,7 +154,17 @@
                     @for (int i = 1; i <= Model.ViewModel.TotalPages; i++)
                     {
                         <li class="page-item @(i == Model.ViewModel.Filter.Page ? "active" : "")">
-                            <a class="page-link" href="?Page=@i&StartDate=@Model.ViewModel.Filter.StartDate&EndDate=@Model.ViewModel.Filter.EndDate&CategoryId=@Model.ViewModel.Filter.CategoryId&AccountId=@Model.ViewModel.Filter.AccountId">
+                            <a class="page-link"
+                               asp-page="/Transactions/Index"
+                               asp-route-page="@i"
+                               asp-route-startDate="@startDate"
+                               asp-route-endDate="@endDate"
+                               asp-route-categoryId="@Model.ViewModel.Filter.CategoryId"
+                               asp-route-accountId="@Model.ViewModel.Filter.AccountId"
+                               asp-route-minAmount="@minAmount"
+                               asp-route-maxAmount="@maxAmount"
+                               asp-route-keyword="@Model.ViewModel.Filter.Keyword"
+                               asp-route-pageSize="@Model.ViewModel.Filter.PageSize">
                                 @i
                             </a>
                         </li>

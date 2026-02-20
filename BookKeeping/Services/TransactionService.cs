@@ -65,7 +65,8 @@ public class TransactionService : ITransactionService
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            query = query.Where(t => t.Note != null && t.Note.Contains(keyword));
+            var normalizedKeyword = keyword.Trim().ToLower();
+            query = query.Where(t => t.Note != null && t.Note.ToLower().Contains(normalizedKeyword));
         }
 
         // Get total count

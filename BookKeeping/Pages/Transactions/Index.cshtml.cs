@@ -28,6 +28,10 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync([FromQuery] TransactionFilter filter)
     {
+        filter.Page = filter.Page < 1 ? 1 : filter.Page;
+        filter.PageSize = filter.PageSize < 1 ? 20 : filter.PageSize;
+        filter.Keyword = string.IsNullOrWhiteSpace(filter.Keyword) ? null : filter.Keyword.Trim();
+
         var (transactions, totalCount) = await _transactionService.GetPagedAsync(
             filter.Page,
             filter.PageSize,
