@@ -128,17 +128,17 @@
 
 ### Implementation for User Story 3
 
-- [ ] T039 [US3] Extend ICategoryService and CategoryService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync, DeleteAndMigrateAsync (move transactions to target category before delete) in BookKeeping/Services/ICategoryService.cs and BookKeeping/Services/CategoryService.cs
-- [ ] T040 [US3] Extend IAccountService and AccountService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync for account management in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
-- [ ] T041 [P] [US3] Create CategoryInputModel (Name, Icon, Type, Color) in BookKeeping/ViewModels/CategoryViewModel.cs
-- [ ] T042 [P] [US3] Create AccountInputModel (Name, Type, Icon, InitialBalance) in BookKeeping/ViewModels/AccountViewModel.cs
-- [ ] T043 [US3] Create Settings/Categories Razor Page with income/expense category lists, OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check), OnPostDeleteAndMigrateAsync handlers in BookKeeping/Pages/Settings/Categories.cshtml and BookKeeping/Pages/Settings/Categories.cshtml.cs
-- [ ] T044 [US3] Create Settings/Accounts Razor Page with account list (showing calculated balances), OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check) handlers in BookKeeping/Pages/Settings/Accounts.cshtml and BookKeeping/Pages/Settings/Accounts.cshtml.cs
+- [X] T039 [US3] Extend ICategoryService and CategoryService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync, DeleteAndMigrateAsync (move transactions to target category before delete) in BookKeeping/Services/ICategoryService.cs and BookKeeping/Services/CategoryService.cs
+- [X] T040 [US3] Extend IAccountService and AccountService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync for account management in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
+- [X] T041 [P] [US3] Create CategoryInputModel (Name, Icon, Type, Color) in BookKeeping/ViewModels/CategoryViewModel.cs
+- [X] T042 [P] [US3] Create AccountInputModel (Name, Type, Icon, InitialBalance) in BookKeeping/ViewModels/AccountViewModel.cs
+- [X] T043 [US3] Create Settings/Categories Razor Page with income/expense category lists, OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check), OnPostDeleteAndMigrateAsync handlers in BookKeeping/Pages/Settings/Categories.cshtml and BookKeeping/Pages/Settings/Categories.cshtml.cs
+- [X] T044 [US3] Create Settings/Accounts Razor Page with account list (showing calculated balances), OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check) handlers in BookKeeping/Pages/Settings/Accounts.cshtml and BookKeeping/Pages/Settings/Accounts.cshtml.cs
 
 ### Tests for User Story 3
 
-- [ ] T076 [P] [US3] Create CategoryServiceTests — verify CreateAsync (unique name+type), UpdateAsync, DeleteAsync (blocked when has transactions), DeleteAndMigrateAsync (transactions moved to target category), HasTransactionsAsync, default category cannot be deleted in BookKeeping.Tests/Unit/Services/CategoryServiceTests.cs
-- [ ] T077 [P] [US3] Create AccountServiceTests — verify CreateAsync (unique name), UpdateAsync, DeleteAsync (blocked when has transactions), HasTransactionsAsync in BookKeeping.Tests/Unit/Services/AccountServiceTests.cs
+- [X] T076 [P] [US3] Create CategoryServiceTests — verify CreateAsync (unique name+type), UpdateAsync, DeleteAsync (blocked when has transactions), DeleteAndMigrateAsync (transactions moved to target category), HasTransactionsAsync, default category cannot be deleted in BookKeeping.Tests/Unit/Services/CategoryServiceTests.cs
+- [X] T077 [P] [US3] Create AccountServiceTests — verify CreateAsync (unique name), UpdateAsync, DeleteAsync (blocked when has transactions), HasTransactionsAsync in BookKeeping.Tests/Unit/Services/AccountServiceTests.cs
 
 **Checkpoint**: 可新增/編輯/刪除分類與帳戶，預設分類不可刪除，使用中的分類提供遷移選項，單元測試通過 — US3 驗證通過
 

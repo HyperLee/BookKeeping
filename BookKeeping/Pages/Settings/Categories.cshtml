@@ -1,0 +1,189 @@
+@page
+@model BookKeeping.Pages.Settings.CategoriesModel
+@{
+    ViewData["Title"] = "分類設定";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" asp-page="/Settings/Categories">分類</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-page="/Settings/Accounts">帳戶</a>
+        </li>
+    </ul>
+
+    <div class="card mb-4">
+        <div class="card-header">新增分類</div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="Create" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-3">
+                    <label class="form-label">名稱</label>
+                    <input name="input.Name" class="form-control" maxlength="50" required />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">圖示</label>
+                    <input name="input.Icon" class="form-control" maxlength="10" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">類型</label>
+                    <select name="input.Type" class="form-select">
+                        <option value="@((int)TransactionType.Expense)">支出</option>
+                        <option value="@((int)TransactionType.Income)">收入</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">顏色</label>
+                    <input name="input.Color" type="color" class="form-control form-control-color" value="#6c757d" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="mb-3">支出分類</h4>
+    @if (Model.ExpenseCategories.Any())
+    {
+        @foreach (var category in Model.ExpenseCategories)
+        {
+            <div class="border rounded p-3 mb-3">
+                <form method="post" asp-page-handler="Update" class="row g-2 align-items-end">
+                    <input type="hidden" name="id" value="@category.Id" />
+                    <input type="hidden" name="input.Type" value="@((int)category.Type)" />
+                    <div class="col-md-3">
+                        <label class="form-label">名稱</label>
+                        <input name="input.Name" class="form-control form-control-sm" value="@category.Name" maxlength="50" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">圖示</label>
+                        <input name="input.Icon" class="form-control form-control-sm" value="@category.Icon" maxlength="10" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">顏色</label>
+                        <input name="input.Color" type="color" class="form-control form-control-color" value="@(category.Color ?? "#6c757d")" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">更新</button>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        @if (category.IsDefault)
+                        {
+                            <span class="badge bg-secondary">預設分類不可刪除</span>
+                        }
+                    </div>
+                </form>
+
+                @if (!category.IsDefault)
+                {
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <form method="post" asp-page-handler="Delete">
+                            <input type="hidden" name="id" value="@category.Id" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除分類？');">刪除</button>
+                        </form>
+
+                        @{
+                            var migrateTargets = Model.ExpenseCategories.Where(c => c.Id != category.Id).ToList();
+                        }
+
+                        @if (migrateTargets.Any())
+                        {
+                            <form method="post" asp-page-handler="DeleteAndMigrate" class="d-flex gap-2">
+                                <input type="hidden" name="id" value="@category.Id" />
+                                <select name="targetCategoryId" class="form-select form-select-sm">
+                                    @foreach (var target in migrateTargets)
+                                    {
+                                        <option value="@target.Id">@target.Icon @target.Name</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-outline-warning btn-sm" onclick="return confirm('確定遷移交易後刪除分類？');">刪除並遷移</button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">目前沒有支出分類。</div>
+    }
+
+    <h4 class="mb-3 mt-4">收入分類</h4>
+    @if (Model.IncomeCategories.Any())
+    {
+        @foreach (var category in Model.IncomeCategories)
+        {
+            <div class="border rounded p-3 mb-3">
+                <form method="post" asp-page-handler="Update" class="row g-2 align-items-end">
+                    <input type="hidden" name="id" value="@category.Id" />
+                    <input type="hidden" name="input.Type" value="@((int)category.Type)" />
+                    <div class="col-md-3">
+                        <label class="form-label">名稱</label>
+                        <input name="input.Name" class="form-control form-control-sm" value="@category.Name" maxlength="50" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">圖示</label>
+                        <input name="input.Icon" class="form-control form-control-sm" value="@category.Icon" maxlength="10" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">顏色</label>
+                        <input name="input.Color" type="color" class="form-control form-control-color" value="@(category.Color ?? "#6c757d")" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">更新</button>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        @if (category.IsDefault)
+                        {
+                            <span class="badge bg-secondary">預設分類不可刪除</span>
+                        }
+                    </div>
+                </form>
+
+                @if (!category.IsDefault)
+                {
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <form method="post" asp-page-handler="Delete">
+                            <input type="hidden" name="id" value="@category.Id" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除分類？');">刪除</button>
+                        </form>
+
+                        @{
+                            var migrateTargets = Model.IncomeCategories.Where(c => c.Id != category.Id).ToList();
+                        }
+
+                        @if (migrateTargets.Any())
+                        {
+                            <form method="post" asp-page-handler="DeleteAndMigrate" class="d-flex gap-2">
+                                <input type="hidden" name="id" value="@category.Id" />
+                                <select name="targetCategoryId" class="form-select form-select-sm">
+                                    @foreach (var target in migrateTargets)
+                                    {
+                                        <option value="@target.Id">@target.Icon @target.Name</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-outline-warning btn-sm" onclick="return confirm('確定遷移交易後刪除分類？');">刪除並遷移</button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">目前沒有收入分類。</div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,107 @@
+@page
+@model BookKeeping.Pages.Settings.AccountsModel
+@{
+    ViewData["Title"] = "帳戶設定";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" asp-page="/Settings/Categories">分類</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" asp-page="/Settings/Accounts">帳戶</a>
+        </li>
+    </ul>
+
+    <div class="card mb-4">
+        <div class="card-header">新增帳戶</div>
+        <div class="card-body">
+            <form method="post" asp-page-handler="Create" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-3">
+                    <label class="form-label">名稱</label>
+                    <input name="input.Name" class="form-control" maxlength="50" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">類型</label>
+                    <select name="input.Type" class="form-select">
+                        @foreach (var accountType in Enum.GetValues<AccountType>())
+                        {
+                            <option value="@((int)accountType)">@accountType</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">圖示</label>
+                    <input name="input.Icon" class="form-control" maxlength="10" required />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">初始餘額</label>
+                    <input name="input.InitialBalance" type="number" class="form-control" step="0.01" min="0" value="0" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="mb-3">帳戶列表</h4>
+    @if (Model.Accounts.Any())
+    {
+        @foreach (var account in Model.Accounts)
+        {
+            <div class="border rounded p-3 mb-3">
+                <form method="post" asp-page-handler="Update" class="row g-2 align-items-end">
+                    <input type="hidden" name="id" value="@account.Id" />
+                    <div class="col-md-3">
+                        <label class="form-label">名稱</label>
+                        <input name="input.Name" class="form-control form-control-sm" value="@account.Name" maxlength="50" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">類型</label>
+                        <select name="input.Type" class="form-select form-select-sm">
+                            @foreach (var accountType in Enum.GetValues<AccountType>())
+                            {
+                                <option value="@((int)accountType)" selected="@(account.Type == accountType ? "selected" : null)">@accountType</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">圖示</label>
+                        <input name="input.Icon" class="form-control form-control-sm" value="@account.Icon" maxlength="10" required />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">初始餘額</label>
+                        <input name="input.InitialBalance" type="number" class="form-control form-control-sm" step="0.01" min="0" value="@account.InitialBalance" />
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">更新</button>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <div class="small text-muted">即時餘額</div>
+                        <div class="fw-bold">@Model.AccountBalances.GetValueOrDefault(account.Id).ToString("N2")</div>
+                    </div>
+                </form>
+
+                <form method="post" asp-page-handler="Delete" class="mt-2">
+                    <input type="hidden" name="id" value="@account.Id" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('確定刪除帳戶？');">刪除</button>
+                </form>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">目前沒有帳戶。</div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
