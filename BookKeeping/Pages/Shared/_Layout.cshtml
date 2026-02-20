@@ -1,51 +1,82 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BookKeeping</title>
+    <title>@ViewData["Title"] - 記帳本</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BookKeeping.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Pages/Shared/_Layout.cshtml.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <!-- Desktop Navigation (≥768px) -->
+    <header class="d-none d-md-block">
+        <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom box-shadow">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">BookKeeping</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <a class="navbar-brand" asp-page="/Index">📒 記帳本</a>
+                <div class="navbar-collapse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            <a class="nav-link" asp-page="/Index">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                            <a class="nav-link" asp-page="/Transactions/Index">交易紀錄</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Reports/Index">報表</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Budgets/Index">預算</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Settings/Categories">設定</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-3 mb-5 mb-md-0">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - BookKeeping - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
+    <!-- Mobile Bottom Navigation (<768px) -->
+    <nav class="mobile-bottom-nav d-md-none">
+        <a class="mobile-nav-item" asp-page="/Index">
+            <span class="mobile-nav-icon">🏠</span>
+            <span class="mobile-nav-label">首頁</span>
+        </a>
+        <a class="mobile-nav-item" asp-page="/Transactions/Index">
+            <span class="mobile-nav-icon">📝</span>
+            <span class="mobile-nav-label">紀錄</span>
+        </a>
+        <a class="mobile-nav-item" asp-page="/Reports/Index">
+            <span class="mobile-nav-icon">📊</span>
+            <span class="mobile-nav-label">報表</span>
+        </a>
+        <a class="mobile-nav-item" asp-page="/Budgets/Index">
+            <span class="mobile-nav-icon">💰</span>
+            <span class="mobile-nav-label">預算</span>
+        </a>
+        <a class="mobile-nav-item" asp-page="/Settings/Categories">
+            <span class="mobile-nav-icon">⚙️</span>
+            <span class="mobile-nav-label">設定</span>
+        </a>
+    </nav>
+
+    <!-- Toast Notification Partial -->
+    <partial name="_Toast" />
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

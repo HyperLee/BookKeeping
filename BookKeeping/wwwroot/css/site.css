@@ -1,5 +1,7 @@
+/* Global Mobile-First Responsive Styles */
 html {
   font-size: 14px;
+  min-width: 320px; /* iPhone SE minimum */
 }
 
 @media (min-width: 768px) {
@@ -8,17 +10,15 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
   margin-bottom: 60px;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Form Styles */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -28,4 +28,48 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+.form-control, .form-select {
+  font-size: 1rem;
+  padding: 0.75rem;
+}
+
+/* Responsive Table */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .table {
+    font-size: 0.875rem;
+  }
+  
+  .table td, .table th {
+    padding: 0.5rem;
+  }
+}
+
+/* Touch-friendly buttons on mobile */
+@media (max-width: 767px) {
+  .btn {
+    min-height: 44px; /* iOS recommended touch target */
+    padding: 0.625rem 1rem;
+  }
+}
+
+/* Utility Classes */
+.text-truncate-mobile {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .text-truncate-mobile {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
 }
