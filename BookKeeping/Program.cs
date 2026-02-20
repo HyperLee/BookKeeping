@@ -5,6 +5,7 @@ using Serilog;
 using Ganss.Xss;
 
 using BookKeeping.Data;
+using BookKeeping.Data.Seed;
 
 namespace BookKeeping;
 
@@ -46,6 +47,18 @@ public class Program
             });
 
             var app = builder.Build();
+
+            // Run database migrations and seed default data
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<BookKeepingDbContext>();
+                context.Database.Migrate();
+                
+                var seeder = new DefaultDataSeeder(context);
+                seeder.SeedAsync().Wait();
+                
+                Log.Information("Database migration and seeding completed");
+            }
 
             // Configure the HTTP request pipeline
             if (!app.Environment.IsDevelopment())

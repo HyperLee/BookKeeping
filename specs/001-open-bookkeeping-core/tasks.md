@@ -76,13 +76,13 @@
 
 **Independent Test**: 新增數筆紀錄 → 關閉瀏覽器 → 重新開啟 App → 確認所有紀錄仍然存在且正確
 
-- [ ] T025 [US2] Create DefaultDataSeeder with 8 preset expense categories (餐飲🍽️, 交通🚗, 娛樂🎮, 購物🛒, 居住🏠, 醫療🏥, 教育📚, 其他📎), 4 income categories (薪資💰, 獎金🎁, 投資收益📈, 其他收入💵), and 3 default accounts (現金💵, 銀行帳戶🏦, 信用卡💳) in BookKeeping/Data/Seed/DefaultDataSeeder.cs
-- [ ] T026 [US2] Generate initial EF Core migration (InitialCreate) with all entity tables, indexes, and constraints via dotnet ef migrations add in BookKeeping/Data/Migrations/
-- [ ] T027 [US2] Register database auto-migration (Migrate) and DefaultDataSeeder execution on application startup in BookKeeping/Program.cs
+- [X] T025 [US2] Create DefaultDataSeeder with 8 preset expense categories (餐飲🍽️, 交通🚗, 娛樂🎮, 購物🛒, 居住🏠, 醫療🏥, 教育📚, 其他📎), 4 income categories (薪資💰, 獎金🎁, 投資收益📈, 其他收入💵), and 3 default accounts (現金💵, 銀行帳戶🏦, 信用卡💳) in BookKeeping/Data/Seed/DefaultDataSeeder.cs
+- [X] T026 [US2] Generate initial EF Core migration (InitialCreate) with all entity tables, indexes, and constraints via dotnet ef migrations add in BookKeeping/Data/Migrations/
+- [X] T027 [US2] Register database auto-migration (Migrate) and DefaultDataSeeder execution on application startup in BookKeeping/Program.cs
 
 ### Tests for User Story 2
 
-- [ ] T072 [US2] Create SeedDataTests — verify 8 preset expense categories, 4 income categories, 3 default accounts seeded correctly; verify re-seeding is idempotent in BookKeeping.Tests/Integration/Data/SeedDataTests.cs
+- [X] T072 [US2] Create SeedDataTests — verify 8 preset expense categories, 4 income categories, 3 default accounts seeded correctly; verify re-seeding is idempotent in BookKeeping.Tests/Integration/Data/SeedDataTests.cs
 
 **Checkpoint**: 資料庫自動建立、種子資料填入、種子資料測試通過、重啟後資料完整保留 — US2 驗證通過
 
