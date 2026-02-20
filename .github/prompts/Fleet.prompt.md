@@ -96,7 +96,7 @@
 
     <project_requirements>
     
-    #file:plan.md 將此文件每個 Phase 依據順序完成, 每個 Phase 完成後再進行下一個 Phase, 不要跳過任何 Phase, 也不要在同一個 Phase 中同時進行多個 Phase 的工作. 每個 Phase 確定完成後要記錄且每個 Phase 完成都要上 git 版控. 當紀錄以及版控完成才往下一個 Phase 進行. 最終全部  Phase 都完成之後才可以結束任務.
+    #file:tasks.md  將此文件每個 Phase 依據順序完成, 每個 Phase 完成後再進行下一個 Phase, 不要跳過任何 Phase, 也不要在同一個 Phase 中同時進行多個 Phase 的工作. 每個 Phase 確定完成後要記錄且每個 Phase 完成都要上 git 版控. 當紀錄以及版控完成才往下一個 Phase 進行. 最終全部  Phase 都完成之後才可以結束任務.
     
     </project_requirements>
     
