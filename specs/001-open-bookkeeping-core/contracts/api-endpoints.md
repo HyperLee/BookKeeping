@@ -136,10 +136,10 @@ public class TransactionDto
 public class TransactionInputModel
 {
     [Required(ErrorMessage = "請選擇日期")]
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; set; }  // MUST NOT be a future date (constitution §VII)
 
     [Required(ErrorMessage = "請輸入金額")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "金額必須大於零")]
+    [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "金額必須大於零")]
     public decimal Amount { get; set; }
 
     [Required(ErrorMessage = "請選擇類型")]
@@ -241,10 +241,14 @@ public class BudgetInputModel
     public int CategoryId { get; set; }
 
     [Required(ErrorMessage = "請輸入預算金額")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "預算金額必須大於零")]
+    [Range(0.01, (double)decimal.MaxValue, ErrorMessage = "預算金額必須大於零")]
     public decimal Amount { get; set; }
 
     public BudgetPeriod Period { get; set; } = BudgetPeriod.Monthly;
+
+    // StartDate 由系統自動設定為當月首日（若未指定）；
+    // 使用者可選擇性指定起始月份
+    public DateOnly? StartDate { get; set; }
 }
 ```
 

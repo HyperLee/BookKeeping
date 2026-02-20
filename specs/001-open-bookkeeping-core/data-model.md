@@ -82,7 +82,7 @@
 
 **驗證規則**:
 - `Amount` MUST > 0（FR-004）
-- `Date` MUST 為有效 ISO 8601 日期（FR-004）
+- `Date` MUST 為有效 ISO 8601 日期且 MUST NOT 為未來日期（FR-004、憲章 §VII）
 - `CategoryId` MUST 對應存在的分類（FR-004）
 - `AccountId` MUST 對應存在的帳戶
 - `Note` 最大長度 500 字元

@@ -3,9 +3,11 @@
 **Input**: Design documents from `/specs/001-open-bookkeeping-core/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
 
-**Tests**: 未在功能規格中明確要求自動化測試任務。本 tasks.md 包含測試專案基礎建設（TestWebApplicationFactory），但不包含個別 User Story 的測試任務。如需 TDD 流程，請另行指定。
+**Tests**: 本 tasks.md 遵循憲章原則 II（測試優先開發 NON-NEGOTIABLE），每個 User Story 包含對應的單元測試與整合測試任務。測試任務置於各 Phase 的 `### Tests` 小節中，實作時應遵循紅-綠-重構（Red-Green-Refactor）流程：先撰寫失敗測試 → 實作功能 → 測試通過 → 重構。
 
 **Organization**: 任務按 User Story 分組，每個 Story 可獨立實作與測試。
+
+**Terminology**: 本文件統一使用「交易紀錄」指稱 Transaction 實體相關操作（同義詞「收支紀錄」僅在面向使用者的 UI 文案中使用）。
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -59,7 +61,12 @@
 - [ ] T023 Update site.css with global mobile-first responsive styles (320px min-width, Bootstrap overrides, form styles, table styles) in BookKeeping/wwwroot/css/site.css
 - [ ] T024 Create TestWebApplicationFactory with in-memory SQLite provider, test seed data, scoped DbContext replacement in BookKeeping.Tests/Helpers/TestWebApplicationFactory.cs
 
-**Checkpoint**: 基礎架構就緒 — 可開始 User Story 實作
+### Tests for Phase 2
+
+- [ ] T070 [P] Create TransactionValidationTests — verify Amount>0, valid date required, CategoryId/AccountId required, Note max 500 chars, future date rejected in BookKeeping.Tests/Unit/Models/TransactionValidationTests.cs
+- [ ] T071 [P] Create DbContextTests — verify global query filters (soft-deleted entities excluded), composite indexes exist, FK Restrict on delete, SaveChangesAsync auto-sets CreatedAt/UpdatedAt in BookKeeping.Tests/Integration/Data/DbContextTests.cs
+
+**Checkpoint**: 基礎架構就緒、基礎測試通過 — 可開始 User Story 實作
 
 ---
 
@@ -73,7 +80,11 @@
 - [ ] T026 [US2] Generate initial EF Core migration (InitialCreate) with all entity tables, indexes, and constraints via dotnet ef migrations add in BookKeeping/Data/Migrations/
 - [ ] T027 [US2] Register database auto-migration (Migrate) and DefaultDataSeeder execution on application startup in BookKeeping/Program.cs
 
-**Checkpoint**: 資料庫自動建立、種子資料填入、重啟後資料完整保留 — US2 驗證通過
+### Tests for User Story 2
+
+- [ ] T072 [US2] Create SeedDataTests — verify 8 preset expense categories, 4 income categories, 3 default accounts seeded correctly; verify re-seeding is idempotent in BookKeeping.Tests/Integration/Data/SeedDataTests.cs
+
+**Checkpoint**: 資料庫自動建立、種子資料填入、種子資料測試通過、重啟後資料完整保留 — US2 驗證通過
 
 ---
 
@@ -91,13 +102,19 @@
 - [ ] T031 [P] [US1] Create TransactionInputModel, TransactionListViewModel, TransactionDto, TransactionFilter DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/TransactionViewModel.cs
 - [ ] T032 [P] [US1] Create DashboardViewModel, AccountBalanceDto, BudgetProgressDto DTOs per contracts/api-endpoints.md in BookKeeping/ViewModels/DashboardViewModel.cs
 - [ ] T033 [US1] Register ICategoryService, IAccountService, ITransactionService in DI container (AddScoped) in BookKeeping/Program.cs
-- [ ] T034 [P] [US1] Create Transactions/Create Razor Page with form (date, amount, type radio, category dropdown, account dropdown, note textarea), jQuery Validation, anti-forgery token, TempData Toast on success in BookKeeping/Pages/Transactions/Create.cshtml and BookKeeping/Pages/Transactions/Create.cshtml.cs
+- [ ] T034 [P] [US1] Create Transactions/Create Razor Page with form (date, amount, type radio, category dropdown with frequently-used categories prioritized at top, account dropdown, note textarea), jQuery Validation, anti-forgery token, TempData Toast on success in BookKeeping/Pages/Transactions/Create.cshtml and BookKeeping/Pages/Transactions/Create.cshtml.cs
 - [ ] T035 [P] [US1] Create Transactions/Edit Razor Page with pre-filled form, OnGetAsync(int id), OnPostAsync update handler, 404 handling in BookKeeping/Pages/Transactions/Edit.cshtml and BookKeeping/Pages/Transactions/Edit.cshtml.cs
 - [ ] T036 [P] [US1] Create Transactions/Index Razor Page with transaction list table (date, amount, type icon, category, account, note), pagination, OnPostDeleteAsync soft-delete handler with confirmation in BookKeeping/Pages/Transactions/Index.cshtml and BookKeeping/Pages/Transactions/Index.cshtml.cs
 - [ ] T037 [US1] Create Dashboard (Index) page with current month summary cards (total income, total expense, balance), account balance list, recent 10 transactions in BookKeeping/Pages/Index.cshtml and BookKeeping/Pages/Index.cshtml.cs
 - [ ] T038 [US1] Add anti-duplicate-submission JavaScript guard (disable submit button on click, re-enable on validation failure) in BookKeeping/wwwroot/js/site.js
 
-**Checkpoint**: 可新增/編輯/刪除收支紀錄，Dashboard 顯示月摘要 — US1 MVP 驗證通過
+### Tests for User Story 1
+
+- [ ] T073 [P] [US1] Create TransactionServiceTests — verify CreateAsync (valid input, audit timestamps), UpdateAsync (amount change, UpdatedAt updated), SoftDeleteAsync (IsDeleted=true, DeletedAt set), GetPagedAsync (pagination, sort by date desc, excludes soft-deleted) in BookKeeping.Tests/Unit/Services/TransactionServiceTests.cs
+- [ ] T074 [P] [US1] Create AccountServiceTests — verify GetBalanceAsync (InitialBalance + Income - Expense calculation with decimal precision), GetAllAsync in BookKeeping.Tests/Unit/Services/AccountServiceTests.cs
+- [ ] T075 [US1] Create TransactionPagesTests — verify Create page returns 200, POST with valid input redirects and persists, POST with invalid input returns validation errors, Edit page loads existing transaction, Delete soft-deletes record in BookKeeping.Tests/Integration/Pages/TransactionPagesTests.cs
+
+**Checkpoint**: 可新增/編輯/刪除收支紀錄，Dashboard 顯示月摘要，單元/整合測試通過 — US1 MVP 驗證通過
 
 ---
 
@@ -107,16 +124,23 @@
 
 **Independent Test**: 開啟 App → 確認預設分類存在 → 新增自訂分類「寵物」→ 新增紀錄時確認可選擇該分類
 
+**⚠️ 相依性**: 此 Phase 依賴 US1（Phase 4）的 T028/T029 完成（擴展相同的 ICategoryService 和 IAccountService 檔案），**不可與 Phase 4 平行執行**。
+
 ### Implementation for User Story 3
 
 - [ ] T039 [US3] Extend ICategoryService and CategoryService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync, DeleteAndMigrateAsync (move transactions to target category before delete) in BookKeeping/Services/ICategoryService.cs and BookKeeping/Services/CategoryService.cs
-- [ ] T040 [P] [US3] Extend IAccountService and AccountService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync for account management in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
+- [ ] T040 [US3] Extend IAccountService and AccountService with CreateAsync, UpdateAsync, DeleteAsync, HasTransactionsAsync for account management in BookKeeping/Services/IAccountService.cs and BookKeeping/Services/AccountService.cs
 - [ ] T041 [P] [US3] Create CategoryInputModel (Name, Icon, Type, Color) in BookKeeping/ViewModels/CategoryViewModel.cs
 - [ ] T042 [P] [US3] Create AccountInputModel (Name, Type, Icon, InitialBalance) in BookKeeping/ViewModels/AccountViewModel.cs
 - [ ] T043 [US3] Create Settings/Categories Razor Page with income/expense category lists, OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check), OnPostDeleteAndMigrateAsync handlers in BookKeeping/Pages/Settings/Categories.cshtml and BookKeeping/Pages/Settings/Categories.cshtml.cs
 - [ ] T044 [US3] Create Settings/Accounts Razor Page with account list (showing calculated balances), OnPostCreateAsync, OnPostUpdateAsync, OnPostDeleteAsync (with in-use check) handlers in BookKeeping/Pages/Settings/Accounts.cshtml and BookKeeping/Pages/Settings/Accounts.cshtml.cs
 
-**Checkpoint**: 可新增/編輯/刪除分類與帳戶，預設分類不可刪除，使用中的分類提供遷移選項 — US3 驗證通過
+### Tests for User Story 3
+
+- [ ] T076 [P] [US3] Create CategoryServiceTests — verify CreateAsync (unique name+type), UpdateAsync, DeleteAsync (blocked when has transactions), DeleteAndMigrateAsync (transactions moved to target category), HasTransactionsAsync, default category cannot be deleted in BookKeeping.Tests/Unit/Services/CategoryServiceTests.cs
+- [ ] T077 [P] [US3] Create AccountServiceTests — verify CreateAsync (unique name), UpdateAsync, DeleteAsync (blocked when has transactions), HasTransactionsAsync in BookKeeping.Tests/Unit/Services/AccountServiceTests.cs
+
+**Checkpoint**: 可新增/編輯/刪除分類與帳戶，預設分類不可刪除，使用中的分類提供遷移選項，單元測試通過 — US3 驗證通過
 
 ---
 
@@ -134,7 +158,12 @@
 - [ ] T048 [US4] Create charts.js with Chart.js doughnut chart (category expense breakdown with colors from Category.Color) and line chart (daily income/expense trends) with responsive:true and touch-friendly tooltips in BookKeeping/wwwroot/js/charts.js
 - [ ] T049 [US4] Implement OnGetChartDataAsync AJAX named handler returning JSON (categoryExpenses + dailyTrends) for async chart data loading in BookKeeping/Pages/Reports/Index.cshtml.cs
 
-**Checkpoint**: 報表頁顯示月摘要卡片、分類圓餅圖、每日趨勢折線圖、空白月份友善提示 — US4 驗證通過
+### Tests for User Story 4
+
+- [ ] T078 [P] [US4] Create ReportServiceTests — verify GetMonthlySummaryAsync (correct totals, balance = income - expense with decimal precision), GetCategoryBreakdownAsync (percentages sum to 100%), GetDailyTrendsAsync (correct daily aggregation), empty month returns zero values in BookKeeping.Tests/Unit/Services/ReportServiceTests.cs
+- [ ] T079 [US4] Create ReportPagesTests — verify Reports page returns 200, chart data AJAX endpoint returns valid JSON, empty month displays friendly message (FR-015) in BookKeeping.Tests/Integration/Pages/ReportPagesTests.cs
+
+**Checkpoint**: 報表頁顯示月摘要卡片、分類圓餅圖、每日趨勢折線圖、空白月份友善提示，測試通過 — US4 驗證通過
 
 ---
 
@@ -153,7 +182,11 @@
 - [ ] T054 [US5] Integrate budget status check into Transactions/Create page — after successful save, AJAX call CheckStatus for the saved category, display Toast warning/error if budget ≥80% in BookKeeping/Pages/Transactions/Create.cshtml and BookKeeping/wwwroot/js/site.js
 - [ ] T055 [US5] Add budget progress section to Dashboard page showing all active budgets with progress bars and status indicators in BookKeeping/Pages/Index.cshtml and BookKeeping/Pages/Index.cshtml.cs
 
-**Checkpoint**: 預算可設定/編輯/刪除，Dashboard 顯示進度條，新增支出後即時顯示預算警告 — US5 驗證通過
+### Tests for User Story 5
+
+- [ ] T080 [US5] Create BudgetServiceTests — verify CreateAsync, UpdateAsync, DeleteAsync, GetAllWithProgressAsync (usage rate calculation with decimal precision), CheckBudgetStatusAsync (normal <80%, warning 80-100%, exceeded >100%), new month resets spending calculation in BookKeeping.Tests/Unit/Services/BudgetServiceTests.cs
+
+**Checkpoint**: 預算可設定/編輯/刪除，Dashboard 顯示進度條，新增支出後即時顯示預算警告，測試通過 — US5 驗證通過
 
 ---
 
@@ -169,7 +202,11 @@
 - [ ] T057 [US6] Add OnGetExportAsync handler to Transactions page returning FileContentResult (text/csv, UTF-8 BOM, Content-Disposition attachment) with optional startDate/endDate params in BookKeeping/Pages/Transactions/Index.cshtml.cs
 - [ ] T058 [US6] Add export UI controls (date range picker, export button) to Transactions/Index page in BookKeeping/Pages/Transactions/Index.cshtml
 
-**Checkpoint**: 可匯出全部或指定日期範圍的紀錄為 CSV，Excel 正確開啟 — US6 驗證通過
+### Tests for User Story 6
+
+- [ ] T081 [US6] Create CsvServiceExportTests — verify RFC 4180 compliance (fields with commas/quotes/newlines properly escaped), UTF-8 BOM present, header row correct, date range filtering works, empty export produces header-only file in BookKeeping.Tests/Unit/Services/CsvServiceTests.cs
+
+**Checkpoint**: 可匯出全部或指定日期範圍的紀錄為 CSV，Excel 正確開啟，測試通過 — US6 驗證通過
 
 ---
 
@@ -185,7 +222,11 @@
 - [ ] T060 [P] [US7] Create ImportResultViewModel (TotalRows, SuccessCount, FailedCount) and ImportError (LineNumber, ErrorMessage) in BookKeeping/ViewModels/ImportResultViewModel.cs
 - [ ] T061 [US7] Create Import/Index Razor Page with file upload form (accept=.csv), format instructions (.csv template download link), file size validation (client-side + server-side), import results display (success/failed counts, error detail list) in BookKeeping/Pages/Import/Index.cshtml and BookKeeping/Pages/Import/Index.cshtml.cs
 
-**Checkpoint**: 可匯入標準 CSV，成功/失敗筆數清楚回報，錯誤行含行號與原因 — US7 驗證通過
+### Tests for User Story 7
+
+- [ ] T082 [US7] Create CsvServiceImportTests — verify valid CSV import (all rows created), invalid date row skipped with error message, amount<=0 row skipped, missing category auto-created, HtmlSanitizer strips XSS vectors from Note/Category/Account fields (FR-035), 5MB size limit enforced (FR-034), 10,000 row limit enforced, empty CSV (header only) returns 「無有效資料」 in BookKeeping.Tests/Unit/Services/CsvServiceTests.cs
+
+**Checkpoint**: 可匯入標準 CSV，成功/失敗筆數清楚回報，錯誤行含行號與原因，測試通過 — US7 驗證通過
 
 ---
 
@@ -201,19 +242,29 @@
 - [ ] T063 [US8] Add filter panel UI (date range pickers, category dropdown, account dropdown, min/max amount inputs, keyword search textbox, clear filters button) to Transactions/Index page in BookKeeping/Pages/Transactions/Index.cshtml
 - [ ] T064 [US8] Update Transactions/Index OnGetAsync to bind TransactionFilter from query string, apply filters, preserve filter state in URL for pagination in BookKeeping/Pages/Transactions/Index.cshtml.cs
 
-**Checkpoint**: 明細列表支援所有篩選條件組合，分頁保留篩選狀態，關鍵字搜尋備註欄位 — US8 驗證通過
+### Tests for User Story 8
+
+- [ ] T083 [US8] Create TransactionFilterTests — verify single filter (date range, categoryId, accountId, amount range, keyword), combined filters (multiple criteria), keyword search matches Note field (case-insensitive), empty filter returns all records, pagination preserves filter state in BookKeeping.Tests/Unit/Services/TransactionServiceTests.cs (append to existing file)
+
+**Checkpoint**: 明細列表支援所有篩選條件組合，分頁保留篩選狀態，關鍵字搜尋備註欄位，測試通過 — US8 驗證通過
 
 ---
 
 ## Phase 11: Polish & Cross-Cutting Concerns
 
-**Purpose**: 跨 User Story 的品質改善與收尾工作
+**Purpose**: 跨 User Story 的品質改善、安全強化、合規驗證與收尾工作
 
-- [ ] T065 [P] Add Serilog structured logging to all services — Information level for CRUD operations (create/update/delete with entity ID), Error level for exceptions with stack trace and request context (FR-039, FR-040, FR-041) in BookKeeping/Services/*.cs
+- [ ] T065 [P] Add Serilog structured logging to all services — Information level for CRUD operations (create/update/delete with entity ID and **old/new value snapshots for audit trail**; financial amounts logged as masked values e.g. "***50" per constitution §V/§VI), Error level for exceptions with stack trace and request context (FR-039, FR-040, FR-041) in BookKeeping/Services/*.cs
 - [ ] T066 [P] Enhance global error handling — configure UseExceptionHandler middleware, update Error.cshtml with user-friendly error page, ensure all unhandled exceptions log to Serilog in BookKeeping/Program.cs and BookKeeping/Pages/Error.cshtml
 - [ ] T067 Verify responsive design across all pages — 320px minimum width (iPhone SE), 768px desktop breakpoint, touch-friendly chart interactions, bottom nav on mobile in BookKeeping/wwwroot/css/site.css
 - [ ] T068 Add XML doc comments to all public APIs (Models, Services interfaces, ViewModels) with <summary>, <param>, <returns>, <example> tags per .github/instructions/csharp.instructions.md
 - [ ] T069 Run quickstart.md end-to-end validation — dotnet build, dotnet ef database update, verify seed data, dotnet run, navigate all 9 pages, confirm CRUD operations, verify CSV export/import, check Chart.js rendering
+- [ ] T084 [P] Configure Content Security Policy (CSP) middleware — add CSP headers (default-src 'self', script-src 'self' for Chart.js/jQuery, style-src 'self' for Bootstrap, img-src 'self' data: for emoji icons) in BookKeeping/Program.cs (constitution §VI)
+- [ ] T085 [P] WCAG 2.1 accessibility audit — verify semantic HTML structure (headings, landmarks, form labels), ARIA attributes on interactive elements (Toast, modal confirmations, progress bars), keyboard navigation for all pages, color contrast ratio ≥ 4.5:1 for text (constitution §III)
+- [ ] T086 [P] Performance validation — basic benchmarks for SC-001 (new transaction < 30s UX flow), SC-002 (100-record monthly report < 2s), SC-003 (1,000-record CSV export < 5s), SC-007 (10,000-record list scroll/filter remains responsive); document results in validation notes
+- [ ] T087 [P] Privacy & dependency audit (FR-027, SC-009) — audit all NuGet packages for telemetry/external API calls, verify no outbound network requests other than to self, document findings; create privacy self-assessment checklist
+- [ ] T088 [P] UX walkthrough validation (SC-008) — manual walkthrough as first-time user: verify intuitive navigation, clear form labels, helpful empty states, Toast feedback, and successful first transaction creation without documentation
+- [ ] T089 Create DashboardPageTests — verify Dashboard returns 200, displays current month summary (income/expense/balance), shows account balances, displays budget progress bars, lists recent 10 transactions in BookKeeping.Tests/Integration/Pages/DashboardPageTests.cs
 
 ---
 
@@ -225,7 +276,7 @@
 Phase 1: Setup ─────────────────► Phase 2: Foundational ─────────────────► Phase 3: US2
                                                                                 │
                                                                                 ▼
-                                                              ┌─────── Phase 4: US1 (MVP) ◄─── Phase 5: US3 (parallel)
+                                                              ┌─────── Phase 4: US1 (MVP) ──────► Phase 5: US3 (sequential)
                                                               │                │
                                                               │    ┌───────────┼───────────┐
                                                               │    ▼           ▼           ▼
@@ -246,7 +297,7 @@ Phase 1: Setup ─────────────────► Phase 2: F
 
 - **US2 (P1)**: 無 Story 相依性，依賴 Foundational（Phase 2）完成 — 建立資料庫與種子資料
 - **US1 (P1)** 🎯 MVP: 依賴 US2 完成（需要資料庫與種子資料）
-- **US3 (P1)**: 依賴 Foundational（Phase 2）完成。**可與 US1 平行執行**（不同檔案集）
+- **US3 (P1)**: 依賴 US1（Phase 4）的 T028/T029 完成（擴展相同的 Service 介面檔案）。**不可與 US1 平行執行**
 - **US4 (P2)**: 依賴 US1 完成（需要交易紀錄資料產生報表）
 - **US5 (P2)**: 依賴 US1 完成（需要交易紀錄資料計算預算使用率）。可與 US4、US6 平行
 - **US6 (P2)**: 依賴 US1 完成（需要交易紀錄資料進行匯出）。可與 US4、US5 平行
@@ -272,7 +323,7 @@ Phase 1: Setup ─────────────────► Phase 2: F
 
 **Phase 4 (US1)**: T028+T029 服務可平行；T031+T032 DTOs 可平行；T034+T035+T036 頁面可平行
 
-**Phase 5 (US3)**: T040+T041+T042 服務擴展與 ViewModel 可平行
+**Phase 5 (US3)**: T041+T042 ViewModel 可平行（T039/T040 依序擴展 Service 介面，不可平行）
 
 **Phase 6~8 (P2 Stories)**: US4、US5、US6 三個 P2 Story 在 US1 完成後**可平行執行**
 
@@ -353,9 +404,9 @@ Task: "Create CsvService export → Transactions export handler"
 多開發者協作：
 
 1. 團隊共同完成 Phase 1 + 2 + 3（Setup + Foundational + US2）
-2. Foundational 完成後：
-   - **Developer A**: US1（收支紀錄 CRUD）+ US3（分類管理）
-   - 或 Developer A: US1, Developer B: US3（同時進行）
+2. US2 完成後：
+   - **Developer A**: US1（收支紀錄 CRUD）
+   - US1 完成後：US3（分類管理，擴展相同 Service 介面）
 3. US1 完成後：
    - **Developer A**: US4（報表）
    - **Developer B**: US5（預算）
@@ -372,8 +423,10 @@ Task: "Create CsvService export → Transactions export handler"
 - [P] 標記的任務 = 不同檔案、無未完成相依性，可平行執行
 - [Story] 標籤對映至 spec.md 中的 User Story，確保可追溯性
 - 每個 User Story 應可獨立完成與測試
+- **測試任務（T070-T083, T089）遵循憲章原則 II（TDD）：建議在對應實作任務之前撰寫測試**
 - 每個任務或邏輯群組完成後建議 commit
 - 在任何 Checkpoint 處可暫停驗證 Story 獨立性
 - 金額一律使用 `decimal` 型別，確保財務計算精確度
 - 所有 POST handler 預設包含 Anti-Forgery Token（Razor Pages 內建）
 - 軟刪除透過 DbContext SaveChangesAsync override 自動處理
+- 日誌中的金額採用部分遮罩策略（如 "***50"），符合憲章 §V 稽核需求與 §VI 隱私保護
